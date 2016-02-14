@@ -7,7 +7,7 @@ describe('Topic static methods', () => {
   describe('createTopic', () => {
     it('should return topic', () => {
       expect(1).to.equal(1);
-      console.log('run');
+      console.log('run')
     })
   })
 })
