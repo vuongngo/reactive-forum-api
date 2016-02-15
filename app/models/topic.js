@@ -1,29 +1,14 @@
 import mongoose from 'mongoose';
 import topicSchema from '../schemas/topic';
+import { promisify } from '../utils/async';
 
 topicSchema.statics.createTopics = function (names) {
   let topics = names.map(topic => {name: topic});
-  return new Promise( (resolve, reject) => {
-    this.create(topics, (err, results) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(results);
-      }
-    })
-  });
+  return promisify(this.create(topics));
 };
 
 topicSchema.statics.createTopic = function (topic) {
-  return new Promise( (resolve, reject) => {
-    this.create({name: topic}, (err, result) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(result);
-      }
-    })
-  })
+  return promisify(this.create({name: topic}));
 }
 
 let Topic = mongoose.model('Topic', topicSchema);

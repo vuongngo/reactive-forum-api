@@ -71,7 +71,7 @@ gulp.task('test', function(cb) {
 });
 
 gulp.task('watch-test', function() {
-  gulp.watch([path.join(__dirname, 'build/backend'), './test/**/*.js'], function() {
+  gulp.watch(['./app/**/*.js', './test/**/*.js'], function() {
     gulp.run('test', function() {
       console.log('Test rerun');
     })
