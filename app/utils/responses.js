@@ -1,41 +1,38 @@
 const responses = {
   badRequest: function (data) {
-    this.status(400);
-    this.json(data);
+    this.status(400).json(data);
   },
 
   forbidden: function(data) {
-    this.status(403);
-    this.json(data);
+    this.status(403).json(data);
   },
 
   notFound: function(data) {
-    this.status(404);
-    this.json(data);
+    this.status(404).json(data);
   },
 
   ok: function(data) {
-    this.status(200);
-    this.json(data);
+    this.status(200).json(data);
   },
 
   created: function(data) {
-    this.status(201);
-    this.json(data);
+    this.status(201).json(data);
   },
 
   serverError: function(data) {
-    this.status(500);
-    this.json(data);
+    this.status(500).json(data);
   },
 
   unauthorized: function(data) {
-    this.status(401);
-    this.json(data);
+    this.status(401).json(data);
   },
 
-  updated: function() {
-    this.status(204);
+  updated: function(data) {
+    this.status(204).json(data);
+  },
+
+  removed: function(data) {
+    this.status(202).json(data);
   }
 };
 

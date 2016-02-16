@@ -4,7 +4,7 @@ import uniqueValidator from 'mongoose-unique-validator';
 
 let topicSchema = new Schema({
   name: {type: String, unique: true, required: true},
-  date: {type: Date, default: Date.now}
+  createdAt: {type: Date, default: Date.now}
 });
 
 export default topicSchema.plugin(uniqueValidator);

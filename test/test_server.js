@@ -12,16 +12,17 @@ express.response = Object.assign(express.response, Responses);
 export default function createServer() {
   var app = express();
 
-  app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({extended: true}));
-  app.use('/api', Router);
-  app.use(logErrors);
+  app.use(bodyParser.json());
   app.use(clientErrorHandler);
+  app.use(logErrors);
   app.use(errorHandler);
+  app.use('/api', Router);
 
-  let port = process.env.PORT || 8080;
+  let port = 8080;
   let server = app.listen(port, () => {
-    console.log('server rerun');
+    var port = server.address().port;
+    console.log('Example app listening at port %s', port);
   });
   return server;
 }

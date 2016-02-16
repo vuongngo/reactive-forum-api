@@ -1,7 +1,11 @@
 import { wrap } from './utils/async';
 import express from 'express';
 import {
-  createTopic
+  getTopic,
+  createTopic,
+  updateTopic,
+  removeTopic,
+  getTopics
 } from './controllers';
 
 let router = express.Router();
@@ -11,7 +15,15 @@ router.route('/')
     res.send('Hello fuck');
   });
 
+router.route('/topics')
+      .get(wrap(getTopics));
+
 router.route('/topic')
- .post(wrap(createTopic));
+      .post(wrap(createTopic));
+
+router.route('/topic/:id')
+      .get(wrap(getTopic))
+      .put(wrap(updateTopic))
+      .delete(wrap(removeTopic));
 
 export default router;
