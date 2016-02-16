@@ -21,5 +21,5 @@ app.use(logErrors);
 app.use(clientErrorHandler);
 app.use(errorHandler);
 
-let port = process.env.PORT || 8080;
+let port = process.env.PORT || 3000;
 app.listen(port);

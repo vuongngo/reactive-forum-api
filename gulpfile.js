@@ -1,3 +1,4 @@
+require('babel-polyfill');
 var gulp = require('gulp');
 var plumber = require('gulp-plumber');
 var sourcemaps = require('gulp-sourcemaps');
@@ -48,13 +49,13 @@ gulp.task('watch', function() {
 
 gulp.task('test', function(cb) {
   mergeStream(
-    gulp.src(['./app/**/*.js', './app/*.js', './server.js'])
+    gulp.src(['./app/**/*.js', './app/*.js', 'server.js'])
         .pipe(istanbul())
         .on('error', swallowError),
     gulp.src(['./test/**/*.js'])
         .pipe(babel(
           {presets: ['es2015'],
-          plugins: ['transform-runtime']}
+           plugins: ['transform-runtime']}
         ))
         .on('error', swallowError)
   ).pipe(plumber())

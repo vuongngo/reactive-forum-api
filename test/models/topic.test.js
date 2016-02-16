@@ -1,13 +1,8 @@
 import expect from 'expect.js';
 import { checkAsync } from '../utils/check';
-import mongoose from 'mongoose';
 import Topic from '../../app/models/topic';
 
 describe('Topic static methods', () => {
-  before(() => {
-    mongoose.connect('localhost', 'test');
-  });
-  
   beforeEach(done => {
     Topic.create({name: 'Mock'}, (err, res) => {
       done();
@@ -20,10 +15,6 @@ describe('Topic static methods', () => {
     })
   });
 
-  after(() => {
-    mongoose.connection.close();  
-  });
-  
   describe('createTopic', () => {
     it('should return topic', checkAsync( async (done) => {
       let topic = await Topic.createTopic('Test');

@@ -1,9 +1,9 @@
 import mongoose from 'mongoose';
-import uniqueValidator from 'mongoose-unique-validator';
 let Schema = mongoose.Schema;
+import uniqueValidator from 'mongoose-unique-validator';
 
 let topicSchema = new Schema({
-  name: {type: String, unique: true, require, required: true},
+  name: {type: String, unique: true, required: true},
   date: {type: Date, default: Date.now}
 });
 
