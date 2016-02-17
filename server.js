@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 import {
   logErrors,
   clientErrorHandler,
-  errorHandler
+  serverErrorHandler
 } from './app/utils/error-middleware';
 import  Responses from './app/utils/responses';
 express.response = Object.assign(express.response, Responses);
@@ -20,6 +20,7 @@ app.use(logErrors);
 app.use(clientErrorHandler);
 app.use(errorHandler);
 app.use('/api', Router);
+app.user(serverErrorHandler);
 
 let port = process.env.PORT || 3000;
 app.listen(port);

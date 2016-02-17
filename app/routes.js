@@ -1,6 +1,8 @@
 import { wrap } from './utils/async';
 import express from 'express';
 import {
+  signupUser,
+  signinUser,
   getTopic,
   createTopic,
   updateTopic,
@@ -14,6 +16,12 @@ router.route('/')
   .get(function(req, res) {
     res.send('Hello fuck');
   });
+
+router.route('/signup')
+      .post(wrap(signupUser));
+
+router.route('/signin')
+      .post(wrap(signinUser));
 
 router.route('/topics')
       .get(wrap(getTopics));

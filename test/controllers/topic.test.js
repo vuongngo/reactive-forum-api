@@ -35,6 +35,15 @@ describe('Topic API', () => {
       .expect(200, done)
   });
 
+  it('should not return topic', done => {
+    request(server)
+      .get(`/api/topic/1`)
+      .expect(res => {
+        expect(res.error.text).to.contain('Cast to');
+      })
+      .expect(404, done);
+  });
+
   it('should return topic', done => {
     request(server)
       .get(`/api/topic/${id}`)
@@ -96,7 +105,7 @@ describe('Topic API', () => {
       .expect(400, done)
   });
 
-  it('should return server error  when Topic can not be updated', done => {
+  it('should return server error  when Topic not found', done => {
     request(server)
       .put(`/api/topic/1`)
       .set('Accept', 'application/json')
@@ -104,7 +113,7 @@ describe('Topic API', () => {
       .expect(res => {
         expect(res.error.text).to.contain('Cast to');
       })
-      .expect(500, done)
+      .expect(404, done)
   });
 
   it('should return status of 202 when Topic is removed', done => {
@@ -113,13 +122,13 @@ describe('Topic API', () => {
       .expect(202, done);
   });
 
-  it('should return status of 500 when topic can not be removed', done => {
+  it('should return status of 500 when topic not found', done => {
     request(server)
       .del(`/api/topic/1`)
       .expect(res => {
         expect(res.error.text).to.contain('Cast to');
       })
-      .expect(500, done);
+      .expect(404, done);
   });
 
   it('should return list of Topics', done => {
@@ -140,5 +149,5 @@ describe('Topic API', () => {
       })
       .expect(200, done)
   })
-  
+    
 })

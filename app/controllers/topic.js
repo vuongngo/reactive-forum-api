@@ -1,13 +1,14 @@
 import Topic from '../models/topic';
+import { checkError } from '../utils/check';
 
 export async function getTopic(req, res, next) {
   let id = req.params.id;
   try {
-    let topic = await Topic.findOne(id).exec();
+    let topic = await Topic.findOne({_id: id}).exec();
     res.ok({topic: topic});
   } catch (err) {
     next(err);
-  }
+  };
 };
 
 export async function createTopic(req, res, next) {
@@ -19,7 +20,7 @@ export async function createTopic(req, res, next) {
     let topic = await Topic.createTopic(name);
     res.created({topic: topic});
   } catch (err) {
-    next(err.errors.name.message);
+    next(err);
   }
 };
 
@@ -33,7 +34,7 @@ export async function updateTopic(req, res, next) {
     let topic = await Topic.update({_id: id}, {$set: {name: name}});
     res.updated(topic);
   } catch (err) {
-    next(err.message);
+    next(err);
   }
 };
 
@@ -43,7 +44,7 @@ export async function removeTopic(req, res, next) {
     let topic = await Topic.remove({_id: id});
     res.removed();
   } catch(err) {
-    next(err.message);
+    next(err);
   }
 };
 

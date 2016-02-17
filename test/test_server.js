@@ -4,7 +4,7 @@ import Router from '../app/routes';
 import {
   logErrors,
   clientErrorHandler,
-  errorHandler
+  serverErrorHandler
 } from '../app/utils/error-middleware';
 import  Responses from '../app/utils/responses';
 express.response = Object.assign(express.response, Responses);
@@ -14,10 +14,10 @@ export default function createServer() {
 
   app.use(bodyParser.urlencoded({extended: true}));
   app.use(bodyParser.json());
-  app.use(clientErrorHandler);
-  app.use(logErrors);
-  app.use(errorHandler);
   app.use('/api', Router);
+  app.use(logErrors);
+  app.use(clientErrorHandler);
+  app.use(serverErrorHandler);
 
   let port = 8080;
   let server = app.listen(port, () => {
