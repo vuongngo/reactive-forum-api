@@ -6,9 +6,9 @@ let Schema = mongoose.Schema;
 
 let commentSchema = new Schema({
   _id: {type: Schema.Types.ObjectId, default: Schema.Types.ObjectId()},
-  _user: {type: Schemas.Types.ObjectId, ref: 'User'},
+  _user: {type: Schema.Types.ObjectId, ref: 'User'},
   text: String,
-  replies: [replySchema],
+  replies: {type: [replySchema], default: []},
   likes: Number,
   likesIds: [{type: Schema.Types.ObjectId, ref: 'User'}],
   createdAt: {type: Date, default: Date.now},

@@ -6,15 +6,31 @@ import commentSchema from './comment';
 let Schema = mongoose.Schema;
 
 let threadSchema = new Schema({
-  _topic: {type: Schema.Types.ObjectId, ref: 'Topic'},
-  owner: {type: Schema.Types.Objectid, ref: 'User'},
-  title: String,
-  description: Number,
+  _topic: {
+    type: Schema.Types.ObjectId,
+    ref: 'Topic',
+    required: true
+  },
+  _user: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  title: {
+    type: String,
+    required: true
+  },
+  body: {
+    type: String,
+    required: true
+  },
   cardImg: imgSchema,
-  tags: [String],
-  comments: [commentSchema],
+  tags: {
+    type: [String],
+    default: []},
+  comments: {type: [commentSchema], default: []},
   likes: Number,
-  likesIds: [{type: Schema.Types.ObjectId, ref: 'User'}],
+  likeIds: [{type: Schema.Types.ObjectId, ref: 'User'}],
   createdAt: {type: Date, default: Date.now},
   updatedAt: Date
 });

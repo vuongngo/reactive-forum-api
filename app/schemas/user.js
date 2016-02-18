@@ -8,10 +8,10 @@ let userSchema = new Schema({
   hash: {type: String, required: true},
   salt: {type: String, required: true},
   token: String,
-  profile: {profileSchema},
+  profile: {type: profileSchema, default: profileSchema},
   userrole: String,
   createdAt: {type: Date, default: Date.now},
   updatedAt: {type: Date, default: Date.now}
-});
+}); 
 
 export default userSchema.plugin(uniqueValidator);

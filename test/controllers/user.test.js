@@ -113,6 +113,6 @@ describe('User API', () => {
         .del('/api/user/' + user._id)
         .set('authorization', 'Bearer ' + token)
         .expect(202, done);
-    })
-  })
-})
+    });
+  });
+});

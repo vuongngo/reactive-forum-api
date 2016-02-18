@@ -1,7 +1,7 @@
 import Topic from '../models/topic';
 import { checkError } from '../utils/check';
 
-export async function getTopic(req, res, next) {
+export async function get(req, res, next) {
   let id = req.params.id;
   try {
     let topic = await Topic.findOne({_id: id}).exec();
@@ -11,7 +11,7 @@ export async function getTopic(req, res, next) {
   };
 };
 
-export async function createTopic(req, res, next) {
+export async function create(req, res, next) {
   let name = req.body.name;
   if (!name) {
     return res.badRequest('Topic name is missing');
@@ -24,7 +24,7 @@ export async function createTopic(req, res, next) {
   }
 };
 
-export async function updateTopic(req, res, next) {
+export async function update(req, res, next) {
   let id = req.params.id;
   let name = req.body.name;
   if (!name) {
@@ -38,7 +38,7 @@ export async function updateTopic(req, res, next) {
   }
 };
 
-export async function removeTopic(req, res, next) {
+export async function remove(req, res, next) {
   let id = req.params.id;
   try {
     let topic = await Topic.remove({_id: id});
@@ -48,7 +48,7 @@ export async function removeTopic(req, res, next) {
   }
 };
 
-export async function getTopics(req, res, next) {
+export async function getBatch(req, res, next) {
   let limit = req.query.limit || 10;
   let last = req.query.last || new Date();
   try {
@@ -59,7 +59,7 @@ export async function getTopics(req, res, next) {
   }
 };
 
-export async function createTopics(req, res, next) {
+export async function createBatch(req, res, next) {
   let names = req.body.names;
   if (!name) {
     return res.badRequest('Topic names are missing');

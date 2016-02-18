@@ -2,7 +2,11 @@ import { wrap } from './utils/async';
 import express from 'express';
 import passport from 'passport';
 import BearerStrategy from 'passport-http-bearer';
-import * as Controllers from './controllers';
+import {
+  auth,
+  user,
+  topic
+} from './controllers';
 import { authenticateWithToken } from './utils/strategy';
 import authorize from './middlewares/authorization';
 
@@ -17,9 +21,9 @@ router.route('/')
   });
 
 // Session routes
-router.post('/signup', wrap(Controllers.signupUser));
-router.post('/signin', wrap(Controllers.signinUser));
-router.post('/signout', authenticate, wrap(Controllers.signoutUser));
+router.post('/signup', wrap(auth.signup));
+router.post('/signin', wrap(auth.signin));
+router.post('/signout', authenticate, wrap(auth.signout));
 
 /*
  * Wrapper for protected route to make it more DRY
@@ -33,10 +37,10 @@ function protectedUserRoute(route, prop, roles, controller) {
   return router[prop](route, authenticate, authorize(roles), wrap(controller));
 }
 
-router.get('/users', wrap(Controllers.getUsers));
-router.get('/user/:userId', wrap(Controllers.getUser));
-protectedUserRoute('/user/:userId', 'put', ['self'], Controllers.updateUser);
-protectedUserRoute('/user/:userId', 'delete', ['admin', 'self'], Controllers.removeUser);
+router.get('/users', wrap(user.getBatch));
+router.get('/user/:userId', wrap(user.get));
+protectedUserRoute('/user/:userId', 'put', ['self'], user.update);
+protectedUserRoute('/user/:userId', 'delete', ['admin', 'self'], user.remove);
   
 /*
  * Wrapper for protected route to make it more DRY
@@ -49,10 +53,10 @@ function protectedTopicRoute(route, prop, controller) {
   return router[prop](route, authenticate, authorize(['admin']), wrap(controller));
 }
 
-router.get('/topics', wrap(Controllers.getTopics));
-router.get('/topic/:id', wrap(Controllers.getTopic));
-protectedTopicRoute('/topic', 'post', Controllers.createTopic);
-protectedTopicRoute('/topic/:id', 'put', Controllers.updateTopic);
-protectedTopicRoute('/topic/:id', 'delete', Controllers.removeTopic);
+router.get('/topics', wrap(topic.getBatch));
+router.get('/topic/:id', wrap(topic.get));
+protectedTopicRoute('/topic', 'post', topic.create);
+protectedTopicRoute('/topic/:id', 'put', topic.update);
+protectedTopicRoute('/topic/:id', 'delete', topic.remove);
 
 export default router;

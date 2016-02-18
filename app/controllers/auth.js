@@ -3,7 +3,7 @@ import { genToken, verifyToken } from '../utils/encryption';
 import { checkKeys, checkError } from '../utils/check';
 import _ from 'lodash';
 
-export async function signupUser(req, res, next) {
+export async function signup(req, res, next) {
   let params = _.pick(req.body, ['username', 'password']);
   if (checkKeys(params)) {
     return res.badRequest(checkKeys(params));
@@ -18,7 +18,7 @@ export async function signupUser(req, res, next) {
   }
 };
 
-export async function signinUser(req, res, next) {
+export async function signin(req, res, next) {
   let params = _.pick(req.body, ['username', 'password']);
   if (checkKeys(params)) {
     return res.badRequest(checkKeys(params));
@@ -33,7 +33,7 @@ export async function signinUser(req, res, next) {
   }
 };
 
-export async function signoutUser(req, res, next) {
+export async function signout(req, res, next) {
   try {
     await User.where({_id: req.user._id}, {$unset: {token: 1}});
     res.updated();

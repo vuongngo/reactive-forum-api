@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 let Schema = mongoose.Schema;
 
 let replySchema = new Schema({
-  _user: {type: Schemas.Types.ObjectId, ref: 'User'},
+  _user: {type: Schema.Types.ObjectId, ref: 'User'},
   text: String,
   likes: Number,
   likesIds: [{type: Schema.Types.ObjectId, ref: 'User'}],

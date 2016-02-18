@@ -4,6 +4,10 @@ import crypto from 'crypto';
 import userSchema from '../schemas/user';
 import { promisify } from '../utils/async';
 
+/*
+* @params params.username{string}
+* @params params.password{string}
+*/
 userSchema.statics.signupUser = function (params) {
   let self = this;
   // promisify for async function
@@ -31,6 +35,10 @@ userSchema.statics.signupUser = function (params) {
   })
 };
 
+/*
+* @params params.username{string}
+* @params params.password(string)
+*/
 userSchema.statics.signinUser = function (params) {
   let self = this;
   return new Promise((resolve, reject) => {
@@ -47,8 +55,41 @@ userSchema.statics.signinUser = function (params) {
   });
 };
 
+/*
+* @params query{object}
+* @params skip{integer}
+* @params limit{integer}
+*/
 userSchema.statics.getUsers = function (query, skip, limit) {
-  return promisify(User.find(query).skip(skip).limit(limit).select('username profile').exec());
+  return promisify(this.find(query).skip(skip).limit(limit).select('username profile').exec());
+};
+
+/*
+* Flag thread
+* Add threadId to user profile flags if not flagged
+*  Remove threadId from user profile flags if flagged
+* @params userId{string}
+* @params threadId{string}
+ */
+userSchema.statics.flagThread = function (userId, threadId) {
+  let self = this;
+  return new Promise((resolve, reject) => {
+    self.findOne({_id: userId})
+        .exec()
+        .then(user => {
+          if (_.find(user.profile.flags, id => id.toString() === threadId.toString())) {
+            return self.update({_id: userId}, {$pull: {'profile.flags': threadId}});
+          } else {
+            return self.update({_id: userId}, {$addToSet: {'profile.flags': threadId}});
+          }
+        })
+        .then(user => {
+          resolve(user);
+        })
+        .catch(err => {
+          reject(err);
+      })
+  })
 };
 
 let User = mongoose.model('User', userSchema);

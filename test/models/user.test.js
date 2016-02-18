@@ -1,17 +1,33 @@
 import expect from 'expect.js';
 import { checkAsync } from '../utils/check';
 import User from '../../app/models/user';
+import Thread from '../../app/models/thread';
+import Topic from '../../app/models/topic';
 
-describe('Topic static methods', () => {
+describe('User static methods', () => {
+  var userId;
+  var threadId;
   beforeEach(done => {
     User.signupUser({username: 'Mock', password: '123456'})
-        .then(() => { done(); })
+        .then(res => {
+          userId = res._id;
+          Topic.create({name: 'Mock'}, (err, topic) => {
+            Thread.create({_topic: topic._id, _user: userId, title: 'Mock', body: 'Mock'}, (err, res) => {
+              threadId = res._id;
+              done();
+            })
+          })          
+        })
         .catch(err => {console.log(err); done(); });
   });
   
   afterEach(done => {
     User.remove({}, (err, res) => {
-      done();
+      Topic.remove({}, (err, res) => {
+        Thread.remove({}, (err, res) => {
+          done();
+        })
+      })
     })
   });
 
@@ -48,4 +64,37 @@ describe('Topic static methods', () => {
       expect(user.username).to.equal('Mock');
     }));
   });
+
+  describe('flagThread', () => {
+    it('should return error when user is not exist', checkAsync(async (done) => {
+      try {
+        let user = await User.flagThread('123', '123');
+      } catch (err) {
+        expect(err.message).to.contain('Cast to');
+      }
+    }));
+
+    it('should return doc when user updated', checkAsync(async (done) => {
+      try {
+        await User.flagThread(userId, threadId);
+        let user = await User.findOne({_id: userId}).exec();
+        expect(user.profile.flags.length).to.equal(1);
+      } catch(err) {
+        expect(err).to.be(undefined);
+      }
+    }));
+
+    it('should return error when user is not exist', checkAsync(async (done) => {
+      try {
+        await User.update({_id: userId} , {$addToSet: {'profile.flags': threadId}});
+        await User.flagThread(userId, threadId);
+        let user = await User.findOne({_id: userId}).exec();
+        expect(user.profile.flags.length).to.equal(0);
+      } catch(err) {
+        expect(err).to.be(undefined);
+      }
+    }));
+    
+  });
+
 })

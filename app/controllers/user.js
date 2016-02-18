@@ -1,8 +1,14 @@
+/*
+* User controller
+*/
 import User from '../models/user';
 import { checkKeys } from '../utils/check';
 import _ from 'lodash';
 
-export async function getUser(req, res, next) {
+/*
+* Get user on userId
+*/
+export async function get(req, res, next) {
   const id = req.params.userId;
   try {
     let user = await User.findOne().where('_id').equals(id).select('username profile').exec();
@@ -12,11 +18,16 @@ export async function getUser(req, res, next) {
   }
 }
 
-export async function getUsers(req, res, next) {
+/*
+* Get users using mongo liked query
+* Eg:
+* /users?limit=20&_id=in:[array of ids]&sort=username:1&page=9
+*/
+export async function getBatch(req, res, next) {
   let query = req.query;
   let limit = req.query.limit || 10;
   let skip = req.query.page * 10 || 0;
-  query = _.omit(query, ['limit', 'page']);
+  query = _.omit(query, ['limit', 'page', 'desc']);
   let dbQuery = _.mapValues(query, function(value) {
     let arr = value.split(':').map(e => e.trim());
     if (arr.length > 1) {
@@ -36,7 +47,10 @@ export async function getUsers(req, res, next) {
   }
 }
 
-export async function updateUser(req, res, next) {
+/*
+* Update user on userId
+*/
+export async function update(req, res, next) {
   const id = req.params.userId;
   let { username, firstName, lastName, avatar } = req.body;
   let params = {username: username, 'profile.firstName': firstName, 'profile.lastName': lastName, 'profile.avatar': avatar};
@@ -49,7 +63,10 @@ export async function updateUser(req, res, next) {
   }
 }
 
-export async function removeUser(req, res, next) {
+/*
+* Remove user on userId
+*/
+export async function remove(req, res, next) {
   const id = req.params.userId;
   try {
     let user = await User.remove({_id: id});
