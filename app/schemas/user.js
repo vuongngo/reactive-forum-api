@@ -9,6 +9,7 @@ let userSchema = new Schema({
   salt: {type: String, required: true},
   token: String,
   profile: {profileSchema},
+  userrole: String,
   createdAt: {type: Date, default: Date.now},
   updatedAt: {type: Date, default: Date.now}
 });

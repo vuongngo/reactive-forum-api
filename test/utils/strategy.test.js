@@ -41,6 +41,6 @@ describe('Strategy test', () => {
       expect(err.name).to.equal('JsonWebTokenError');
       done();
     });
-  })
+  });
   
 })

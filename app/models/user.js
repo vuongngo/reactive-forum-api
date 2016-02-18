@@ -45,7 +45,11 @@ userSchema.statics.signinUser = function (params) {
       });
     });
   });
-}
+};
+
+userSchema.statics.getUsers = function (query, skip, limit) {
+  return promisify(User.find(query).skip(skip).limit(limit).select('username profile').exec());
+};
 
 let User = mongoose.model('User', userSchema);
 export default User;

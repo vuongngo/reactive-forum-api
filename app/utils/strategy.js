@@ -7,7 +7,6 @@ export function authenticateWithToken(token, done) {
       User.findOne({token: token}, (err, user) => {
         if (err) { return done(err); }
         if (!user) { return done({name: 'AuthError', message: 'User not found'}); }
-        if (user._id.toString() !== decoded._id.toString()) { return done({name: 'AuthError', message: 'Wrong user'}); }
         return done(null, user, { scope: 'all'});
       })
     })

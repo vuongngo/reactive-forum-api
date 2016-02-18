@@ -1,13 +1,13 @@
 export function logErrors(err, req, res, next) {
-  console.error(err.stack);
-  next(err);
+//  console.error(err.stack);
+  return next(err);
 };
 
 export function clientErrorHandler(err, req, res, next) {
   if (req.xhr) {
-    res.serverError('Something failed!');
+    return res.serverError('Something failed!');
   } else {
-    next(err);
+    return next(err);
   }
 };
 
@@ -15,16 +15,22 @@ export function serverErrorHandler(err, req, res, next) {
   switch (err.name) {
     case 'ValidationError':
       for (var prop in err.errors) {
-        res.serverError(err.errors[prop].message);
+        return res.serverError(err.errors[prop].message);
       }
       break;
     case 'CastError':
-      res.notFound(err.message);
+      return res.notFound(err.message);
       break;
     case 'Unauthenticated':
-      res.unauthorized(err.message);
+      return res.unauthorized(err.message);
+      break;
+    case 'JsonWebTokenError':
+      return res.unauthorized(err.message);
+      break;
+    case 'AuthError':
+      return res.unauthorized(err.message);
       break;
     default:
-      res.serverError(err);
+      return res.serverError(err);
   }
 };

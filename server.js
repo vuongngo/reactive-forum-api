@@ -18,9 +18,8 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use(logErrors);
 app.use(clientErrorHandler);
-app.use(errorHandler);
 app.use('/api', Router);
-app.user(serverErrorHandler);
+app.use(serverErrorHandler);
 
 let port = process.env.PORT || 3000;
 app.listen(port);
