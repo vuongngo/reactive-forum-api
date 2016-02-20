@@ -42,8 +42,13 @@ threadSchema.statics.getThreads = function (params) {
 * @params params.cardImg{String}
 * @params params.tags{array}
 */
-threadSchema.statics.createThread = function (params) {
-  return promisify(this.create(params));
+threadSchema.statics.createThread = async function (params) {
+  try {
+    let thread = await this.create(params);
+    return this.findOne({_id: thread._id}).deepPopulate('_user').exec();
+  } catch(err) {
+    return(err);
+  }
 };
 
 /*

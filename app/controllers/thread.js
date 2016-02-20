@@ -1,6 +1,7 @@
 import Thread from '../models/thread';
-import { checkError } from '../utils/check';
+import { checkKeys } from '../utils/check';
 import { batchQuery } from '../utils/query';
+import _ from 'lodash';
 
 /*
 * Get thread by id
@@ -8,7 +9,7 @@ import { batchQuery } from '../utils/query';
 export async function get(req, res, next) {
   let id = req.params.id;
   try {
-    let thread = await Thread.findOne({_id: id}).exec();
+    let thread = await Thread.getThreadById(id);
     res.ok({thread: thread});
   } catch (err) {
     return next(err);

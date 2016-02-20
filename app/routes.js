@@ -74,7 +74,7 @@ function protectedThreadRoute(route, prop, roles, model, controller) {
 }
 router.get('/threads', wrap(thread.getBatch));
 router.get('/thread/:id', wrap(thread.get));
-protectedThreadRoute('/thread', 'post', thread.create);
+router.post('/thread', authenticate, wrap(thread.create));
 protectedThreadRoute('/thread/:id', 'put', ['admin', 'owner'], Thread, thread.update);
 protectedThreadRoute('/thread/:id', 'delete',['admin', 'owner'], Thread,  thread.remove);
 
