@@ -5,7 +5,6 @@ import replySchema from './reply';
 let Schema = mongoose.Schema;
 
 let commentSchema = new Schema({
-  _id: {type: Schema.Types.ObjectId, default: Schema.Types.ObjectId()},
   _user: {type: Schema.Types.ObjectId, ref: 'User'},
   text: String,
   replies: {type: [replySchema], default: []},

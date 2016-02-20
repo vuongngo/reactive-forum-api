@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+var deepPopulate = require('mongoose-deep-populate')(mongoose);
 //Children Schemas
 import imgSchema from './img';
 import commentSchema from './comment';
@@ -35,4 +36,22 @@ let threadSchema = new Schema({
   updatedAt: Date
 });
 
-export default threadSchema;
+export default threadSchema.plugin(deepPopulate, {
+  whitelist: [
+    '_user',
+    'comments._user',
+    'comments.replies._user'
+  ],
+  populate: {
+    '_user': {
+      select: 'username profile'
+    },
+    'comments._user': {
+      select: 'username profile'
+    },
+    'comments.replies._user': {
+      select: 'username profile'
+    }
+  }
+});
+

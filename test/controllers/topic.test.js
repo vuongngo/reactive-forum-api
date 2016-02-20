@@ -16,32 +16,18 @@ describe('Topic API', () => {
     server = createServer();
   });
 
-  beforeEach(done => {
-    Topic.create({name: 'Mock'}, (err, res) => {
-      id = res._id;
-      User.create({username: 'Mock', password: '123456', salt: '123', hash: '123', userrole: 'admin'})
-          .then(res => {
-            user = res;
-            genToken(user)
-            .then(res => {
-              token = res;
-              User.where({_id: user._id}).update({$set: {token: token}}, (err, res) => {
-                done();
-              })
-            })
-            .catch(err => { done(); })
-          })
-          .catch(err => { done(); })
-    })
-  });
+  beforeEach(checkAsync(async (done) => {
+    let topic = await Topic.create({name: 'Mock'});
+    id = topic._id;
+    user = await User.create({username: 'Mock', password: '123456', salt: '123', hash: '123', userrole: 'admin'});
+    token = await genToken(user);
+    await User.where({_id: user._id}).update({$set: {token: token}});
+  }));
 
-  afterEach(done => {
-    Topic.remove({}, (err, res) => {
-      User.remove({}, () => {
-        done();
-      })
-    })
-  });
+  afterEach(checkAsync( async (done) => {
+    await Topic.remove({});
+    await User.remove({});
+  }));
 
   after(done => {
     server.close(done);

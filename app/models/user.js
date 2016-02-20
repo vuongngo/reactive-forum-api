@@ -56,12 +56,16 @@ userSchema.statics.signinUser = function (params) {
 };
 
 /*
-* @params query{object}
-* @params skip{integer}
-* @params limit{integer}
-*/
-userSchema.statics.getUsers = function (query, skip, limit) {
-  return promisify(this.find(query).skip(skip).limit(limit).select('username profile').exec());
+ * @params query{object}
+ * @params skip{integer}
+ * @params limit{integer}
+ */
+userSchema.statics.getUsers = function (params) {
+  if (typeof params === 'undefined') {
+    params = {};
+  };
+  let {dbQuery, skip, limit} = params;
+  return promisify(this.find(dbQuery).skip(skip).limit(limit).select('username profile').exec());
 };
 
 /*
@@ -71,25 +75,18 @@ userSchema.statics.getUsers = function (query, skip, limit) {
 * @params userId{string}
 * @params threadId{string}
  */
-userSchema.statics.flagThread = function (userId, threadId) {
-  let self = this;
-  return new Promise((resolve, reject) => {
-    self.findOne({_id: userId})
-        .exec()
-        .then(user => {
-          if (_.find(user.profile.flags, id => id.toString() === threadId.toString())) {
-            return self.update({_id: userId}, {$pull: {'profile.flags': threadId}});
-          } else {
-            return self.update({_id: userId}, {$addToSet: {'profile.flags': threadId}});
-          }
-        })
-        .then(user => {
-          resolve(user);
-        })
-        .catch(err => {
-          reject(err);
-      })
-  })
+userSchema.statics.flagThread = async function (userId, threadId) {
+  try {
+    let user = await this.findOne({_id: userId}).exec();
+    if (_.find(user.profile.flags, id => id.toString() === threadId.toString())) {
+      await this.update({_id: userId}, {$pull: {'profile.flags': threadId}});
+    } else {
+      await this.update({_id: userId}, {$addToSet: {'profile.flags': threadId}});
+    }
+    return await this.findOne({_id: userId}).exec(); 
+  } catch (err) {
+    return err;
+  }
 };
 
 let User = mongoose.model('User', userSchema);

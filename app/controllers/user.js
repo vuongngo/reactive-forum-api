@@ -3,6 +3,7 @@
 */
 import User from '../models/user';
 import { checkKeys } from '../utils/check';
+import { batchQuery } from '../utils/query';
 import _ from 'lodash';
 
 /*
@@ -24,23 +25,8 @@ export async function get(req, res, next) {
 * /users?limit=20&_id=in:[array of ids]&sort=username:1&page=9
 */
 export async function getBatch(req, res, next) {
-  let query = req.query;
-  let limit = req.query.limit || 10;
-  let skip = req.query.page * 10 || 0;
-  query = _.omit(query, ['limit', 'page', 'desc']);
-  let dbQuery = _.mapValues(query, function(value) {
-    let arr = value.split(':').map(e => e.trim());
-    if (arr.length > 1) {
-      const key = arr.shift();
-      let obj = {};
-      obj[`\$${key}`] = arr.join(':');
-      return obj;
-    } else {
-      return value;
-    }
-  });
   try {
-    let users = await User.getUsers(dbQuery, skip, limit);
+    let users = await User.getUsers(batchQuery(req));
     res.ok({users: users});
   } catch (err) {
     return next(err);

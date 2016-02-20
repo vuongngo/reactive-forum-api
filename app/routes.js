@@ -5,10 +5,12 @@ import BearerStrategy from 'passport-http-bearer';
 import {
   auth,
   user,
-  topic
+  topic,
+  thread
 } from './controllers';
 import { authenticateWithToken } from './utils/strategy';
 import authorize from './middlewares/authorization';
+import Thread from './models/thread';
 
 passport.use(new BearerStrategy(authenticateWithToken));
 let authenticate = passport.authenticate('bearer', {session: false});
@@ -28,9 +30,9 @@ router.post('/signout', authenticate, wrap(auth.signout));
 /*
  * Wrapper for protected route to make it more DRY
  * @params route{String}
- * @params route{String}
+ * @params prop{String}
  * @params roles{array} ['admin', 'self', 'owner']
- * @params route{function}
+ * @params controller{function}
  */
 
 function protectedUserRoute(route, prop, roles, controller) {
@@ -45,8 +47,8 @@ protectedUserRoute('/user/:userId', 'delete', ['admin', 'self'], user.remove);
 /*
  * Wrapper for protected route to make it more DRY
  * @params route{String}
- * @params route{String}
- * @params route{function}
+ * @params prop{String}
+ * @params controller{function}
  */
 
 function protectedTopicRoute(route, prop, controller) {
@@ -58,5 +60,22 @@ router.get('/topic/:id', wrap(topic.get));
 protectedTopicRoute('/topic', 'post', topic.create);
 protectedTopicRoute('/topic/:id', 'put', topic.update);
 protectedTopicRoute('/topic/:id', 'delete', topic.remove);
+
+/*
+* Wrapper for protected route to make it more DRY
+* @params route{String}
+* @params prop{String}
+* @params roles{array}
+* @params model{object}
+* @params controller{function}
+*/
+function protectedThreadRoute(route, prop, roles, model, controller) {
+  return router[prop](route, authenticate, authorize(roles, model), wrap(controller));
+}
+router.get('/threads', wrap(thread.getBatch));
+router.get('/thread/:id', wrap(thread.get));
+protectedThreadRoute('/thread', 'post', thread.create);
+protectedThreadRoute('/thread/:id', 'put', ['admin', 'owner'], Thread, thread.update);
+protectedThreadRoute('/thread/:id', 'delete',['admin', 'owner'], Thread,  thread.remove);
 
 export default router;

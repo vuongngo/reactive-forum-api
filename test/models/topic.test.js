@@ -3,17 +3,13 @@ import { checkAsync } from '../utils/check';
 import Topic from '../../app/models/topic';
 
 describe('Topic static methods', () => {
-  beforeEach(done => {
-    Topic.create({name: 'Mock'}, (err, res) => {
-      done();
-    })  
-  });
+  beforeEach(checkAsync(async (done) => {
+    await Topic.create({name: 'Mock'});
+  }));
 
-  afterEach(done => {
-    Topic.remove({}, (err, res) => {
-      done();
-    })
-  });
+  afterEach(checkAsync(async (done) => {
+    Topic.remove({});
+  }))
 
   describe('createTopic', () => {
     it('should return topic', checkAsync( async (done) => {
@@ -26,7 +22,7 @@ describe('Topic static methods', () => {
       try {
         await Topic.createTopic('Mock');
       } catch (err) {
-        expect(err).to.be.an('object');
+        expect(err.name).to.equal('ValidationError');
         expect(err.errors.name.message).to.equal("Error, expected `name` to be unique. Value: `Mock`");
       }
     }));
@@ -35,11 +31,28 @@ describe('Topic static methods', () => {
       try {
         await Topic.createTopic('');
       } catch(err) {
-        expect(err).to.be.an('object');
+        expect(err.name).to.equal('ValidationError');
         expect(err.errors.name.message).to.equal("Path `name` is required.");
       }
-    }))
+    }));
+   
+  });
 
-  })
+  describe('createTopics', () => {
+    it('should return topic', checkAsync( async (done) => {
+      let topics = await Topic.createTopics(['Test1', 'Test2']);
+      expect(topics.length).to.equal(2);
+    }));
+
+    it('should return validation error', checkAsync(async (done) => {
+      try {
+        await Topic.createTopics(['Test1', '']);
+      } catch(err) {
+        expect(err.name).to.equal('ValidationError');
+        expect(err.errors.name.message).to.equal("Path `name` is required.");
+      }
+    }));
+  });
+  
 })
 

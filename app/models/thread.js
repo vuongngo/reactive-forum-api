@@ -5,6 +5,35 @@ import { promisify } from '../utils/async';
 import _ from 'lodash';
 
 /*
+* Get thread by id
+* @params id{string}
+ */
+threadSchema.statics.getThreadById = function (id) {
+  return promisify(this.findOne({_id: id})
+                       .deepPopulate('_user comments._user comments.replies._user')
+                       .exec()
+  );
+};
+
+/*
+ * @params query{object}
+ * @params skip{integer}
+ * @params limit{integer}
+ */
+threadSchema.statics.getThreads = function (params) {
+  if (typeof params === 'undefined') {
+    params = {};
+  };
+  let {dbQuery, skip, limit} = params;
+  return promisify(this.find(dbQuery)
+                       .skip(skip)
+                       .limit(limit)
+                       .deepPopulate('_user comments._user comments.replies._user')
+                       .exec()
+  );
+};
+
+/*
 * Create new thread
 * @params params._topic{String} *
 * @params params._user{String} *
@@ -26,10 +55,15 @@ threadSchema.statics.createThread = function (params) {
 * @params params.cardImg{String}
 * @params params.tags{array}
  */
-threadSchema.statics.updateThread = function (threadId, params) {
+threadSchema.statics.updateThread = async function (threadId, params) {
   params = _.pick(params, ['_topic', 'title', 'body', 'cardImg', 'tags']);
   params = _.pickBy(params, function(value) { return value != null && value.length != 0});
-  return promisify(this.update({_id: threadId}, {$set: params}));
+  try {
+    let res = await this.update({_id: threadId}, {$set: params});
+    return await this.getThreadById(threadId);
+  } catch (err) {
+    return err;
+  }
 };
 
 /*
@@ -39,28 +73,18 @@ threadSchema.statics.updateThread = function (threadId, params) {
 * @params threadId{string}
 * @params userId{string}
 */
-threadSchema.statics.likeThread = function (userId, threadId) {
-  var self = this;
-  return new Promise((resolve, reject) => {
-    self.findOne({_id: threadId})
-        .exec()
-        .then(thread => {
-          return _.find(thread.likeIds, id => id.toString() === userId.toString());
-        })
-        .then(res => {
-          if (res) {
-            return self.update({_id: threadId}, {$pull: {likeIds: userId}, $inc: {likes: -1}});
-          } else {
-            return self.update({_id: threadId}, {$push: {likeIds: userId}, $inc: {likes: 1}});
-          }
-        })
-        .then(res => {
-          resolve(res);
-        })
-        .catch(err => {
-          reject(err);
-      })
-  })
+threadSchema.statics.likeThread = async function (userId, threadId) {
+  try {
+    let thread = await this.findOne({_id: threadId}).exec();
+    if (_.find(thread.likeIds, id => id.toString() === userId.toString())) {
+      await this.update({_id: threadId}, {$pull: {likeIds: userId}, $inc: {likes: -1}});
+    } else {
+      await this.update({_id: threadId}, {$push: {likeIds: userId}, $inc: {likes: 1}});
+    }
+    return await this.getThreadById(threadId);
+  } catch (err) {
+    return err;
+  }
 };
 
 /*
@@ -71,21 +95,15 @@ threadSchema.statics.likeThread = function (userId, threadId) {
  * @params threadId{string}
  * @params text{string}
  */
-threadSchema.statics.createComment = function (userId, threadId, text) {
-  let self = this;
-  return new Promise((resolve, reject) => {
-    let params = {_user: userId, text: text};
-    self.update({_id: threadId}, {$push: {comments: params}})
-      .then(thread => {
-        return User.update({_id: user._id}, {$inc: {'profile.comments': 1, 'profile.total': 1}});
-      })
-      .then(user => {
-        resolve(user);
-      })
-      .catch(err => {
-        reject(err);
-      })
-  })
+threadSchema.statics.createComment = async function (userId, threadId, text) {
+  let params = {_user: userId, text: text};
+  try {
+    await this.update({_id: threadId}, {$push: {comments: params}});
+    await User.update({_id: userId}, {$inc: {'profile.comments': 1, 'profile.total': 1}});
+    return await this.getThreadById(threadId);
+  } catch (err) {
+    return err;
+  }
 };
 
 /*
@@ -95,25 +113,18 @@ threadSchema.statics.createComment = function (userId, threadId, text) {
  * @params commentId{string}
  * @params text{string}
  */
-threadSchema.statics.updateComment = function(userId, threadId, commentId, text) {
-  let self = this;
-  return new Promise((resolve, reject) => {
-    self.findOne({_id: threadId})
-        .exec()
-        .then(thread => {
-          if (_.find(thread.comments, comment => comment._id === commentId)._user === userId) {
-            return self.update({_id: threadId, comments: {$elemMatch: {_id: commentId}}}, {$set: {'comments.$.text': text}});
-          } else {
-            reject({name: 'Unauthorized', message: 'User did not created this comment'});
-          }
-        })
-        .then(thread => {
-          resolve(thread);
-        })
-        .catch(err => {
-          reject(err);
-        })
-  })
+threadSchema.statics.updateComment = async function(userId, threadId, commentId, text) {
+  try {
+    let thread = await this.findOne({_id: threadId}).exec();
+    if (_.find(thread.comments, comment => comment._id.toString() === commentId.toString())._user.toString() === userId.toString()) {
+      await this.update({_id: threadId, comments: {$elemMatch: {_id: commentId}}}, {$set: {'comments.$.text': text}});
+    } else {
+      throw new Error({name: 'Unauthorized', message: 'User did not created this comment'});
+    }
+    return await this.getThreadById(threadId);
+  } catch (err) {
+    return err;
+  }
 };
 
 /*
@@ -124,25 +135,18 @@ threadSchema.statics.updateComment = function(userId, threadId, commentId, text)
  * @params threadId{string}
  * @params text{string}
  */
-threadSchema.statics.removeComment = function(userId, threadId, commentId, text) {
-  let self = this;
-  return new Promise((resolve, reject) => {
-    self.findOne({_id: threadId})
-        .exec()
-        .then(thread => {
-          if (_.find(thread.comments, comment => comment._id === commentId)._user === userId) {
-            return self.update({_id: threadId}, {$pull: {comments: {_id: commentId}}}, false, false);
-          } else {
-            reject({name: 'Unauthorized', message: 'User did not created this comment'});
-          }
-        })
-        .then(thread => {
-          resolve(thread);
-        })
-        .catch(err => {
-          reject(err);
-        })
-  })
+threadSchema.statics.removeComment = async function(userId, threadId, commentId, text) {
+  try {
+    let thread = await this.findOne({_id: threadId}).exec();
+    if (_.find(thread.comments, comment => comment._id.toString() === commentId.toString())._user.toString() === userId.toString()) {
+      await this.update({_id: threadId}, {$pull: {comments: {_id: commentId}}}, false, false);
+    } else {
+      throw new Error({name: 'Unauthorized', message: 'User did not created this comment'});
+    }
+    return await this.getThreadById(threadId);
+  } catch (err) {
+    return err;
+  }
 };
 
 /*
@@ -154,21 +158,15 @@ threadSchema.statics.removeComment = function(userId, threadId, commentId, text)
 * @params commentId{string}
 * @params text{string}
  */
-threadSchema.statics.createReply = function(userId, threadId, commentId, text) {
-  let self = this;
-  return new Promise((resolve, reject) => {
-    let params = {_user: userId, text: text};
-    self.update({_id: threadId, comments: {$elemMatch: {_id: commentId}}}, {$addToSet: {'comments.$.replies': params}})
-      .then(thread => {
-        return User.update({_id: userId}, {$inc: {'profile.replies': 1, 'profile.total': 1}});
-      })
-      .then(user => {
-        resolve(user);
-      })
-      .catch(err => {
-        reject(err);
-    })
-  })
+threadSchema.statics.createReply = async function(userId, threadId, commentId, text) {
+  let params = {_user: userId, text: text};
+  try {
+    await this.update({_id: threadId, comments: {$elemMatch: {_id: commentId}}}, {$addToSet: {'comments.$.replies': params}});
+    await User.update({_id: userId}, {$inc: {'profile.replies': 1, 'profile.total': 1}});
+    return await this.getThreadById(threadId);
+  } catch (err) {
+    return err;
+  }
 };
 
 /*
@@ -179,31 +177,21 @@ threadSchema.statics.createReply = function(userId, threadId, commentId, text) {
  * @params replyId{string}
  * @params text{string}
  */
-threadSchema.statics.updateReply = function(userId, threadId, commentId, replyId, text) {
-  let self = this;
-  return new Promise((resolve, reject) => {
-    self.findOne({_id: threadId})
-        .exec()
-        .then(thread => {
-          let comment = _.find(thread.comments, comment => comment._id === commentId);
-          let replyIndex = _.findIndex(comment.replies, reply => reply._id === reply);
-          if (comment[replyIndex]._user !== userId) {
-            reject({name: 'Unauthorized', message: 'You did not create this reply'});
-          }
-          return replyIndex;
-        })
-        .then(replyIndex => {
-          let params = {};
-          params['comments.$.replies.' + replyIndex + '.text'] = text;
-          return self.update({_id: threadId, comments: {$elemMatch: {_id: commentId}}}, {$set: params});
-        })
-        .then(thread => {
-          resolve(thread);
-        })
-        .catch(err => {
-          reject(err);
-        })
-  })
+threadSchema.statics.updateReply = async function(userId, threadId, commentId, replyId, text) {
+  try {
+    let thread = await this.findOne({_id: threadId}).exec();
+    let comment = _.find(thread.comments, comment => comment._id.toString() === commentId.toString());
+    let replyIndex = _.findIndex(comment.replies, reply => reply._id.toString() === replyId.toString());
+    if (comment.replies[replyIndex]._user.toString() !== userId.toString()) {
+      throw new Error({name: 'Unauthorized', message: 'You did not create this reply'});
+    }
+    let params = {};
+    params['comments.$.replies.' + replyIndex + '.text'] = text;
+    await this.update({_id: threadId, comments: {$elemMatch: {_id: commentId}}}, {$set: params});
+    return await this.getThreadById(threadId);
+  } catch (err) {
+    return err;
+  }
 };
 
 /*
@@ -213,29 +201,19 @@ threadSchema.statics.updateReply = function(userId, threadId, commentId, replyId
  * @params commentId{string}
  * @params replyId{string}
  */
-threadSchema.statics.removeReply = function(userId, threadId, commentId, replyId) {
-  let self = this;
-  return new Promise((resolve, reject) => {
-    self.findOne({_id: threadId})
-        .exec()
-        .then(thread => {
-          let comment = _.find(thread.comments, comment => comment._id === commentId);
-          let replyIndex = _.findIndex(comment.replies, reply => reply._id === reply);
-          if (comment[replyIndex]._user !== userId) {
-            reject({name: 'Unauthorized', message: 'You did not create this reply'});
-          }
-          return replyIndex;
-        })
-        .then(replyIndex => {
-          return self.update({_id: threadId, comments: {$elemMatch: {_id: commentId}}}, {$pull: {'comments.$.replies': replyIndex}});
-        })
-        .then(thread => {
-          resolve(thread);
-        })
-        .catch(err => {
-          reject(err);
-        })
-  })
+threadSchema.statics.removeReply = async function(userId, threadId, commentId, replyId) {
+  try {
+    let thread = await this.findOne({_id: threadId}).exec();
+    let comment = _.find(thread.comments, comment => comment._id.toString() === commentId.toString());
+    let reply = _.find(comment.replies, reply => reply._id.toString() === replyId.toString());
+    if (reply._user.toString() !== userId.toString()) {
+      throw new Error({name: 'Unauthorized', message: 'You did not create this reply'});
+    }
+    await this.update({_id: threadId, comments: {$elemMatch: {_id: commentId}}}, {$pull: {'comments.$.replies': {_id: replyId}}});
+    return await this.getThreadById(threadId);
+  } catch (err) {
+    return err;
+  }
 };
 
 /*
@@ -246,27 +224,20 @@ threadSchema.statics.removeReply = function(userId, threadId, commentId, replyId
 * @params threadId{string}
 * @params commentId{string}
  */
-threadSchema.statics.likeComment = function(userId, threadId, commentId) {
-  let self = this;
-  return new Promise((resolve, reject) => {
-    self.findOne({_id: threadId})
-        .exec()
-        .then(thread => {
-          let comment = _.find(thread.comments, comment => comment._id === commentId);
-          let hasUser = _.find(comment.likesIds, id => id === userId);
-          if (hasUser) {
-            return self.update({_id: threadId, comments: {$elemMatch: {_id: commentId}}}, {$inc: {'comments.$.likes': -1}, $pull: {'comments.$.likesIds': userId}});
-          } else {
-            return self.update({_id: threadId, comments: {$elemMatch: {_id: commentId}}}, {$inc: {'comments.$.likes': 1}, $push: {'comments.$.likesIds': userId}});
-          }
-        })
-        .then(thread => {
-          resolve(thread);
-        })
-        .catch(err => {
-          reject(err);
-      })
-  })
+threadSchema.statics.likeComment = async function(userId, threadId, commentId) {
+  try {
+    let thread = await this.findOne({_id: threadId}).exec();
+    let comment = _.find(thread.comments, comment => comment._id.toString() === commentId.toString());
+    let hasUser = _.find(comment.likesIds, id => id.toString() === userId.toString());
+    if (hasUser) {
+      await this.update({_id: threadId, comments: {$elemMatch: {_id: commentId}}}, {$inc: {'comments.$.likes': -1}, $pull: {'comments.$.likesIds': userId}});
+    } else {
+      await this.update({_id: threadId, comments: {$elemMatch: {_id: commentId}}}, {$inc: {'comments.$.likes': 1}, $push: {'comments.$.likesIds': userId}});
+    }
+    return await this.getThreadById(threadId);
+  } catch (err) {
+    return err;
+  }
 };
 
 /*
@@ -278,36 +249,26 @@ threadSchema.statics.likeComment = function(userId, threadId, commentId) {
 * @params commentId{string}
 * @params replyId{string}
  */
-threadSchema.statics.likeReply = function (userId, threadId, commentId, replyId) {
-  var self = this;
-  return new Promise((resolve, reject) => {
-    self.findOne({_id: threadId})
-        .exec()
-        .then(thread => {
-          let comment = _.find(thread.comments, comment => comment._id === commentId);
-          let replyIndex = _.findIndex(comment.replies, reply => reply._id === reply);
-          return {index: replyIndex, alreadyLiked: _.find(comment[replyIndex].likesIds, id => id === userId)};
-        })
-        .then(res => {
-          let paramsId = {};
-          let params = {};
-          if (res.alreadyLiked) {
-            paramsId["comments.$.replies." + res.index + ".likeIds"] = userId;
-            params["comments.$.replies." + res.index + ".likes"] = -1;
-            return self.update({_id: threadId, comments: {$elemMatch: {_id: commentId}}}, {$inc: params, $pull: paramsId});            
-          } else {
-            paramsId["comments.$.replies." + res.index + ".likeIds"] = userId;
-            params["comments.$.replies." + res.index + ".likes"] = 1;
-            return self.update({_id: threadId, comments: {$elemMatch: {_id: commentId}}}, {$inc: params, $push: paramsId});            
-          }
-        })
-        .then(thread => {
-          resolve(thread);
-        })
-        .catch(err => {
-          reject(err);
-        })
-  })
+threadSchema.statics.likeReply = async function (userId, threadId, commentId, replyId) {
+  try {
+    let thread = await this.findOne({_id: threadId}).exec();
+    let comment = _.find(thread.comments, comment => comment._id.toString() === commentId.toString());
+    let replyIndex = _.findIndex(comment.replies, reply => reply._id.toString() === replyId.toString());
+    let paramsId = {};
+    let params = {};
+    if (_.find(comment.replies[replyIndex].likesIds, id => id.toString() === userId.toString())) {
+      paramsId["comments.$.replies." + replyIndex + ".likesIds"] = userId;
+      params["comments.$.replies." + replyIndex + ".likes"] = -1;
+      await this.update({_id: threadId, comments: {$elemMatch: {_id: commentId}}}, {$inc: params, $pull: paramsId});            
+    } else {
+      paramsId["comments.$.replies." + replyIndex + ".likesIds"] = userId;
+      params["comments.$.replies." + replyIndex + ".likes"] = 1;
+      await this.update({_id: threadId, comments: {$elemMatch: {_id: commentId}}}, {$inc: params, $push: paramsId});            
+    }
+    return await this.getThreadById(threadId);
+  } catch (err) {
+    return err;
+  }
 };
 
 

@@ -14,27 +14,16 @@ describe('Topic API', () => {
     server = createServer();
   });
 
-  beforeEach(done => {
-    User.signupUser({username: 'Mock', password: '123456'})
-        .then(res => {
-          user = res;
-          genToken(user)
-            .then(res => {
-              token = res;
-              User.where({_id: user._id}).update({$set: {token: token}}, (err, res) => {
-                done();
-              })
-            })
-            .catch(err => { done(); })
-        })
-        .catch(err => { done(); });
-  });
+  beforeEach(checkAsync(async (done) => {
+    user = await User.signupUser({username: 'Mock', password: '123456'});
+    let res = await genToken(user);
+    token = res;
+    await User.where({_id: user._id}).update({$set: {token: token}});
+  }));
 
-  afterEach(done => {
-    User.remove({}, (err, res) => {
-      done();
-    })
-  });
+  afterEach(checkAsync(async (done) => {
+    await User.remove({});
+  }));
 
   after(done => {
     server.close(done);

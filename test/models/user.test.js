@@ -7,29 +7,19 @@ import Topic from '../../app/models/topic';
 describe('User static methods', () => {
   var userId;
   var threadId;
-  beforeEach(done => {
-    User.signupUser({username: 'Mock', password: '123456'})
-        .then(res => {
-          userId = res._id;
-          Topic.create({name: 'Mock'}, (err, topic) => {
-            Thread.create({_topic: topic._id, _user: userId, title: 'Mock', body: 'Mock'}, (err, res) => {
-              threadId = res._id;
-              done();
-            })
-          })          
-        })
-        .catch(err => {console.log(err); done(); });
-  });
-  
-  afterEach(done => {
-    User.remove({}, (err, res) => {
-      Topic.remove({}, (err, res) => {
-        Thread.remove({}, (err, res) => {
-          done();
-        })
-      })
-    })
-  });
+  beforeEach(checkAsync(async (done) => {
+    let user = await User.signupUser({username: 'Mock', password: '123456'});
+    userId = user._id;
+    let topic = await Topic.create({name: 'Mock'});
+    let thread = await Thread.create({_topic: topic._id, _user: userId, title: 'Mock', body: 'Mock'});
+    threadId = thread._id;
+  }));
+
+  afterEach(checkAsync(async (done) => {
+    await User.remove({});
+    await Topic.remove({});
+    await Thread.remove({});
+  }));
 
   describe('signupUser', () => {
     it('should return error when username is missing', checkAsync( async (done) => {
