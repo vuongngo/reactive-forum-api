@@ -172,14 +172,8 @@ threadSchema.statics.createReply = async function(userId, threadId, commentId, t
  * @params replyId{string}
  * @params text{string}
  */
-threadSchema.statics.updateReply = async function(userId, threadId, commentId, replyId, text) {
+threadSchema.statics.updateReply = async function(userId, threadId, commentId, replyIndex, text) {
   try {
-    let thread = await this.findOne({_id: threadId}).exec();
-    let comment = _.find(thread.comments, comment => comment._id.toString() === commentId.toString());
-    let replyIndex = _.findIndex(comment.replies, reply => reply._id.toString() === replyId.toString());
-    if (comment.replies[replyIndex]._user.toString() !== userId.toString()) {
-      throw new Error({name: 'Unauthorized', message: 'You did not create this reply'});
-    }
     let params = {};
     params['comments.$.replies.' + replyIndex + '.text'] = text;
     await this.update({_id: threadId, comments: {$elemMatch: {_id: commentId}}}, {$set: params});
@@ -198,12 +192,6 @@ threadSchema.statics.updateReply = async function(userId, threadId, commentId, r
  */
 threadSchema.statics.removeReply = async function(userId, threadId, commentId, replyId) {
   try {
-    let thread = await this.findOne({_id: threadId}).exec();
-    let comment = _.find(thread.comments, comment => comment._id.toString() === commentId.toString());
-    let reply = _.find(comment.replies, reply => reply._id.toString() === replyId.toString());
-    if (reply._user.toString() !== userId.toString()) {
-      throw new Error({name: 'Unauthorized', message: 'You did not create this reply'});
-    }
     await this.update({_id: threadId, comments: {$elemMatch: {_id: commentId}}}, {$pull: {'comments.$.replies': {_id: replyId}}});
     return await this.getThreadById(threadId);
   } catch (err) {

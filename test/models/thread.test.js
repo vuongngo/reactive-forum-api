@@ -3,7 +3,7 @@ import { checkAsync } from '../utils/check';
 import User from '../../app/models/user';
 import Thread from '../../app/models/thread';
 import Topic from '../../app/models/topic';
-
+ 
 describe('Thread static methods', () => {
   var userId;
   var threadId;
@@ -305,17 +305,9 @@ describe('Thread static methods', () => {
       }
     }));
 
-    it('should return error when user did not create reply', checkAsync(async (done) => {
-      try {
-        let updated = await Thread.updateReply('123', threadId, thread.comments[0]._id, thread.comments[0].replies[0]._id, 'Test');
-      } catch (err) {
-        expect(err.name).to.be('Unauthorized');
-      }
-    }));
-
     it('should update reply', checkAsync(async (done) => {
       try {
-        let updated = await Thread.updateReply(userId, threadId, thread.comments[0]._id, thread.comments[0].replies[0]._id, 'Test');
+        let updated = await Thread.updateReply(userId, threadId, thread.comments[0]._id, 0, 'Test');
         expect(updated.comments[0].replies[0].text).to.equal('Test');
       } catch (err) {
         expect(err).to.be(undefined);
@@ -352,14 +344,6 @@ describe('Thread static methods', () => {
         await Thread.removeReply(userId, threadId, '123', thread.comments[0]._id, '123');
       } catch (err) {
         expect(err.name).to.equal('TypeError');
-      }
-    }));
-
-    it('should return error when user did not create reply', checkAsync(async (done) => {
-      try {
-        let updated = await Thread.removeReply('123', threadId, thread.comments[0]._id, thread.comments[0].replies[0]._id);
-      } catch (err) {
-        expect(err.name).to.be('Unauthorized');
       }
     }));
 

@@ -1,7 +1,6 @@
 import request from 'supertest';
 import expect from 'expect.js';
 import { checkAsync } from '../utils/check';
-import createServer from '../test_server';
 import User from '../../app/models/user';
 import { genToken, verifyToken } from '../../app/utils/encryption';
 
@@ -11,9 +10,10 @@ describe('Topic API', () => {
   var token;
   
   before(() => {
-    server = createServer();
+    delete require.cache[require.resolve('../../server')];
+    server = require('../../server');
   });
-
+  
   beforeEach(checkAsync(async (done) => {
     user = await User.signupUser({username: 'Mock', password: '123456'});
     let res = await genToken(user);

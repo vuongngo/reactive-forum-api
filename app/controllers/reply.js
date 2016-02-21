@@ -11,7 +11,7 @@ export async function create(req, res, next) {
   let text = req.body.text;
   try {
     let thread = await Thread.createReply(userId, threadId, commentId, text);
-    return res.updated({thread: thread});
+    return res.ok({thread: thread});
   } catch(err) {
     return next(err);
   }
@@ -24,11 +24,11 @@ export async function update(req, res, next) {
   let userId = req.user._id;
   let threadId = req.params.threadId;
   let commentId = req.params.commentId;
-  let replyId = req.params.replyId;
+  let replyIndex = req.replyIndex;
   let text = req.body.text;
   try {
-    let thread = await Thread.updateReply(useId, threadId, commentId, replyId, text);
-    return res.updated({thread: thread});
+    let thread = await Thread.updateReply(userId, threadId, commentId, replyIndex, text);
+    return res.ok({thread: thread});
   } catch(err) {
     return next(err);
   }
@@ -45,7 +45,7 @@ export async function remove(req, res, next) {
   let replyId = req.params.replyId;
   try {
     await Thread.removeReply(userId, threadId, commentId, replyId);
-    return res.removed();
+    return res.ok();
   } catch (err) {
     return next(err);
   }
@@ -62,7 +62,7 @@ export async function like(req, res, next) {
   let replyId = req.params.replyId;
   try {
     let thread = await Thread.likeReply(userId, threadId, commentId, replyId);
-    return res.updated({thread: thread});
+    return res.ok({thread: thread});
   } catch (err) {
     return next(err);
   }

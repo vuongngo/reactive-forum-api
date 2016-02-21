@@ -6,7 +6,7 @@ import User from '../../app/models/user';
 import Thread from '../../app/models/thread';
 import Topic from '../../app/models/topic';
 
-describe('Comment API', () => {
+describe('Reply API', () => {
   var server;
   var topic;
   var thread;
@@ -51,131 +51,130 @@ describe('Comment API', () => {
     server.close(done);
   });
 
-  describe('create comment endpoint', () => {
+  describe('create reply endpoint', () => {
     it('should return unauthenticate error', done => {
       request(server)
-        .post(`/api/thread/${thread._id}/comment/`)
+        .post(`/api/thread/${thread._id}/comment/${thread.comments[0]._id}/reply`)
         .send({text: 'Test'})
         .expect(401, done);
     });
 
-    it('should return thread with two comments', done => {
+    it('should return thread with two replies', done => {
       request(server)
-        .post(`/api/thread/${thread._id}/comment/`)
+        .post(`/api/thread/${thread._id}/comment/${thread.comments[0]._id}/reply`)
         .set('authorization', 'Bearer ' + userToken)
         .send({text: 'Test'})
         .expect(res => {
-          expect(res.body.thread.comments.length).to.equal(2);
+          expect(res.body.thread.comments[0].replies.length).to.equal(2);
         })
         .expect(200, done);
     });
   });
 
-  describe('update comment endpoint', () => {
+  describe('update reply endpoint', () => {
     it('should return unauthenticate error', done => {
       request(server)
-        .put(`/api/thread/${thread._id}/comment/${thread.comments[0]._id}`)
+        .put(`/api/thread/${thread._id}/comment/${thread.comments[0]._id}/reply/${thread.comments[0].replies[0]._id}`)
         .send({text: 'Test'})
         .expect(401, done);
     });
 
-    it('should return unauthorized error when user did not create comment', done => {
+    it('should return unauthorized error when user did not create reply', done => {
       request(server)
-        .put(`/api/thread/${thread._id}/comment/${thread.comments[0]._id}`)
+        .put(`/api/thread/${thread._id}/comment/${thread.comments[0]._id}/reply/${thread.comments[0].replies[0]._id}`)
         .set('authorization', 'Bearer ' + anotherUserToken)
         .send({text: 'Update Test'})
         .expect(401, done);
     });
     
-    it('should return thread with updated comment as user', done => {
+    it('should return thread with updated reply as user', done => {
       request(server)
-        .put(`/api/thread/${thread._id}/comment/${thread.comments[0]._id}`)
+        .put(`/api/thread/${thread._id}/comment/${thread.comments[0]._id}/reply/${thread.comments[0].replies[0]._id}`)
         .set('authorization', 'Bearer ' + userToken)
         .send({text: 'Updated Test'})
         .expect(res => {
-          expect(res.body.thread.comments[0].text).to.equal('Updated Test');
+          expect(res.body.thread.comments[0].replies[0].text).to.equal('Updated Test');
         })
         .expect(200, done);
     });
 
-    it('should return thread with updated comment as admin', done => {
+    it('should return thread with updated reply as admin', done => {
       request(server)
-        .put(`/api/thread/${thread._id}/comment/${thread.comments[0]._id}`)
+        .put(`/api/thread/${thread._id}/comment/${thread.comments[0]._id}/reply/${thread.comments[0].replies[0]._id}`)
         .set('authorization', 'Bearer ' + adminToken)
         .send({text: 'Updated Test'})
         .expect(res => {
-          expect(res.body.thread.comments[0].text).to.equal('Updated Test');
+          expect(res.body.thread.comments[0].replies[0].text).to.equal('Updated Test');
         })
         .expect(200, done);
     });
   });
   
-  describe('remove comment endpoint', () => {
+  describe('remove reply endpoint', () => {
     it('should return unauthenticate error', done => {
       request(server)
-        .del(`/api/thread/${thread._id}/comment/${thread.comments[0]._id}`)
+        .del(`/api/thread/${thread._id}/comment/${thread.comments[0]._id}/reply/${thread.comments[0].replies[0]._id}`)
         .send({text: 'Test'})
         .expect(401, done);
     });
 
-    it('should return unauthorized error when user did not create comment', done => {
+    it('should return unauthorized error when user did not create reply', done => {
       request(server)
-        .del(`/api/thread/${thread._id}/comment/${thread.comments[0]._id}`)
+        .del(`/api/thread/${thread._id}/comment/${thread.comments[0]._id}/reply/${thread.comments[0].replies[0]._id}`)
         .set('authorization', 'Bearer ' + anotherUserToken)
         .send({text: 'Remove Test'})
         .expect(401, done);
     });
     
-    it('should removed comment as user', done => {
+    it('should removed reply as user', done => {
       request(server)
-        .del(`/api/thread/${thread._id}/comment/${thread.comments[0]._id}`)
+        .del(`/api/thread/${thread._id}/comment/${thread.comments[0]._id}/reply/${thread.comments[0].replies[0]._id}`)
         .set('authorization', 'Bearer ' + userToken)
         .send({text: 'Removed Test'})
-        .expect(202, done);
+        .expect(200, done);
     });
 
-    it('should removed comment as admin', done => {
+    it('should removed reply as admin', done => {
       request(server)
-        .del(`/api/thread/${thread._id}/comment/${thread.comments[0]._id}`)
+        .del(`/api/thread/${thread._id}/comment/${thread.comments[0]._id}/reply/${thread.comments[0].replies[0]._id}`)
         .set('authorization', 'Bearer ' + adminToken)
         .send({text: 'Removed Test'})
-        .expect(202, done);
+        .expect(200, done);
     });
   });
 
-  describe('like comment endpoint', () => {
+  describe('like reply endpoint', () => {
     it('should return unauthenticate error', done => {
       request(server)
-        .get(`/api/thread/${thread._id}/comment/${thread.comments[0]._id}/like`)
+        .get(`/api/thread/${thread._id}/comment/${thread.comments[0]._id}/reply/${thread.comments[0].replies[0]._id}/like`)
         .expect(401, done);
     });
 
-    it('should liked comment as user', done => {
+    it('should liked reply as user', done => {
       request(server)
-        .get(`/api/thread/${thread._id}/comment/${thread.comments[0]._id}/like`)
+        .get(`/api/thread/${thread._id}/comment/${thread.comments[0]._id}/reply/${thread.comments[0].replies[0]._id}/like`)
         .set('authorization', 'Bearer ' + userToken)
         .expect(res => {
-          expect(res.body.thread.comments[0].likes).to.equal(1);
-          expect(res.body.thread.comments[0].likeIds.toString()).to.contain(user._id);
+          expect(res.body.thread.comments[0].replies[0].likes).to.equal(1);
+          expect(res.body.thread.comments[0].replies[0].likeIds.toString()).to.contain(user._id);
         })
         .expect(200, done);
     });
 
     it('should unlike comment as user', done => {
-      Thread.likeComment(user._id, thread._id, thread.comments[0]._id)
+      Thread.likeReply(user._id, thread._id, thread.comments[0]._id, thread.comments[0].replies[0]._id)
             .then(res => {
               request(server)
-                .get(`/api/thread/${thread._id}/comment/${thread.comments[0]._id}/like`)
+                .get(`/api/thread/${thread._id}/comment/${thread.comments[0]._id}/reply/${thread.comments[0].replies[0]._id}/like`)
                 .set('authorization', 'Bearer ' + userToken)
                 .expect(res => {
-                  expect(res.body.thread.comments[0].likes).to.equal(0);
-                  expect(res.body.thread.comments[0].likeIds.toString()).not.to.contain(user._id);
+                  expect(res.body.thread.comments[0].replies[0].likes).to.equal(0);
+                  expect(res.body.thread.comments[0].replies[0].likeIds.toString()).not.to.contain(user._id);
                 })
                 .expect(200, done);
             })
             .catch(err => done());
     });
   });
-  
 })
 

@@ -114,8 +114,7 @@ function protectedCommentRoute(route, prop, roles, controller) {
 //Validate comment
 commentRouter.param('commentId', wrap(async (req, res, next) => {
   try {
-    let thread = await Thread.findOne({_id: req.params.threadId}).exec();
-    let comment = _.find(thread.comments, comment => comment._id.toString() === req.params.commentId.toString());
+    let comment = _.find(req.obj.comments, comment => comment._id.toString() === req.params.commentId.toString());
     if (comment) {
       req.comment = comment;
       return next();
@@ -130,5 +129,43 @@ protectedCommentRoute('/', 'post', [], comment.create);
 protectedCommentRoute('/:commentId', 'put', ['admin', 'commentOwner'], comment.update);
 protectedCommentRoute('/:commentId', 'delete', ['admin', 'commentOwner'], comment.remove);
 protectedCommentRoute('/:commentId/like', 'get', undefined, comment.like);
+
+/*
+ * Reply router is nested inside router
+ */
+let replyRouter = express.Router({mergeParams: true});
+commentRouter.use('/:commentId/reply', replyRouter);
+
+/*
+ * Wrapper for protected route to make it more DRY
+ * @params route{String}
+ * @params prop{String}
+ * @params roles{array}
+ * @params controller{function}
+ */
+
+function protectedReplyRoute(route, prop, roles, controller) {
+  return replyRouter[prop](route, authenticate, authorize(roles), wrap(controller));
+}
+
+//Validate reply
+replyRouter.param('replyId', wrap(async (req, res, next) => {
+  try {
+    let replyIndex = _.findIndex(req.comment.replies, reply => reply._id.toString() === req.params.replyId.toString());
+    if (replyIndex > -1) {
+      req.reply = req.comment.replies[replyIndex];
+      req.replyIndex = replyIndex;
+      return next();
+    }
+    return res.notFound('Reply is not found');
+  } catch (err) {
+    return next(err);
+  }
+}));
+
+protectedReplyRoute('/', 'post', [], reply.create); 
+protectedReplyRoute('/:replyId', 'put', ['admin', 'replyOwner'], reply.update);
+protectedReplyRoute('/:replyId', 'delete', ['admin', 'replyOwner'], reply.remove);
+protectedReplyRoute('/:replyId/like', 'get', undefined, reply.like);
 
 export default router;

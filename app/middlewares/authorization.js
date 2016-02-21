@@ -20,6 +20,9 @@ export default function authorize(roles = []) {
         case 'commentOwner':
           return isCommentOwner(req);
           break;
+        case 'replyOwner':
+          return isReplyOwner(req);
+          break;
         default:
           return false;
       }
@@ -46,5 +49,9 @@ function isOwner(req) {
 
 function isCommentOwner(req) {
   return req.user._id.toString() === req.comment._user.toString();
+}
+
+function isReplyOwner(req) {
+  return req.user._id.toString() === req.reply._user.toString();
 }
 

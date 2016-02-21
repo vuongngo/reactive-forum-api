@@ -1,7 +1,6 @@
 import request from 'supertest';
 import expect from 'expect.js';
 import { checkAsync } from '../utils/check';
-import createServer from '../test_server';
 import User from '../../app/models/user';
 import { genToken, verifyToken } from '../../app/utils/encryption';
 
@@ -9,9 +8,10 @@ describe('User API', () => {
   var server;
   var user;
   var token;
-  
+   
   before(() => {
-    server = createServer();
+    delete require.cache[require.resolve('../../server')];
+    server = require('../../server');
   });
 
   beforeEach(checkAsync(async (done) => {
