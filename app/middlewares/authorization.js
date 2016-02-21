@@ -1,37 +1,41 @@
-export default function authorize(roles, obj) {
-  return (req, res, next) => {
-    if ( isAdmin(roles, req) ) {
-      return next(); 
+/*
+* Strategy to check role
+*/
+export default function authorize(roles = []) {
+  return function (req, res, next) {
+    
+    let checkRole = (role) => {
+      switch(role) {
+        case 'admin':
+          return isAdmin(req);
+          break;
+        case 'self':
+          return isSelf(req);
+          break;
+        case 'owner':
+          return isOwner(req);
+          break;
+        default:
+          return false;
+      }
     }
-    if (obj) {
-      if ( isOwner(roles, req, obj) ) {
-        return next();
-      };
-    }
-    if ( isSelf(roles, req) ) {
+    
+    if (roles.map(role => checkRole(role)).reduce((prev, current) => prev || current)) {
       return next();
-    };
-    res.unauthorized('Sorry, this resouce is protected');
+    }
+    return res.unauthorized('User is not authorized'); 
   }
 }
 
-function isAdmin(roles, req) {
-  if (roles.indexOf('admin') > -1 && req.user.userrole === 'admin') {
-    return true;
-  }
-  return false;
+function isAdmin(req) {
+  return req.user.userrole === 'admin';
 }
 
-function isOwner(roles, req, obj) {
-  if (roles.indexOf('owner') > -1 && obj.findOne({_id: req.params.id}).populate('user').owner._id === req.user._id) {
-    return true;
-  }
-  return false;
+function isSelf(req) {
+  return req.params.userId.toString() === req.user._id.toString();
 }
 
-function isSelf(roles, req) {
-  if (roles.indexOf('self') > -1 && req.params.userId.toString() === req.user._id.toString()) {
-    return true;
-  }
-  return false;
+function isOwner(req) {
+  return req.user._id.toString() === req.obj._user.toString();
 }
+

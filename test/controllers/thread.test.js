@@ -123,7 +123,7 @@ describe('Thread API', () => {
         })
         .expect(400, done);
     });
-
+ 
     it('should return thread', done => {
       params._topic = topic._id;
       request(server)
@@ -137,5 +137,79 @@ describe('Thread API', () => {
         .expect(201, done);
     });
       
+  });
+
+  describe('update thread endpoint', () => {
+    it('should return unauthenticate error when user not signed in', done => {
+      request(server)
+        .put('/api/thread/' + thread._id)
+        .send({title: 'Update test'})
+        .expect(res => {
+          expect(res.error.text).to.equal('Unauthorized');
+        })
+        .expect(401, done);
+    });
+
+    it('should return unauthorized error when user did not create thread', done => {
+      request(server)
+        .put('/api/thread/' + thread._id)
+        .set({title: 'Update test'})
+        .set('authorization', 'Bearer ' + anotherUserToken)
+        .expect(res => {
+          expect(res.error.text).to.contain('User is not authorized');
+        })
+        .expect(401, done)
+    });
+
+    it('should update thread when user is admin', done => {
+      request(server)
+        .put('/api/thread/' + thread._id)
+        .send({title: 'Update test'})
+        .set('authorization', 'Bearer ' + adminToken)
+        .expect(204, done)
+    });
+    
+    it('should update thread when user is admin', done => {
+      request(server)
+        .put('/api/thread/' + thread._id)
+        .send({title: 'Update test'})
+        .set('authorization', 'Bearer ' + userToken)
+        .expect(204, done)
+    });
+  });
+
+  describe('remove thread endpoint', () => {
+    it('should return unauthenticate error when user not signed in', done => {
+      request(server)
+        .del('/api/thread/' + thread._id)
+        .expect(res => {
+          expect(res.error.text).to.equal('Unauthorized');
+        })
+        .expect(401, done);
+    });
+
+    it('should return unauthorized error when user did not create thread', done => {
+      request(server)
+        .del('/api/thread/' + thread._id)
+        .set('authorization', 'Bearer ' + anotherUserToken)
+        .expect(res => {
+          expect(res.error.text).to.contain('User is not authorized');
+        })
+        .expect(401, done)
+    });
+
+    it('should remove thread when user is admin', done => {
+      request(server)
+        .del('/api/thread/' + thread._id)
+        .set('authorization', 'Bearer ' + adminToken)
+        .expect(202, done)
+    });
+    
+    it('should remove thread when user is admin', done => {
+      request(server)
+        .del('/api/thread/' + thread._id)
+        .set('authorization', 'Bearer ' + userToken)
+        .expect(202, done)
+    });
   });
 })

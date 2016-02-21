@@ -16,8 +16,8 @@ mongoose.connect('localhost', 'forum');
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
-app.use(logErrors);
 app.use(clientErrorHandler);
+app.use(logErrors);
 app.use('/api', Router);
 app.use(serverErrorHandler);
 

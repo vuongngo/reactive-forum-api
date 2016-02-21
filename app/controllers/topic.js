@@ -32,7 +32,7 @@ export async function update(req, res, next) {
   }
   try {
     let topic = await Topic.update({_id: id}, {$set: {name: name}});
-    res.updated(topic);
+    return res.updated(topic);
   } catch (err) {
     return next(err);
   }
@@ -42,7 +42,7 @@ export async function remove(req, res, next) {
   let id = req.params.id;
   try {
     let topic = await Topic.remove({_id: id});
-    res.removed();
+    return res.removed();
   } catch(err) {
     return next(err);
   }
@@ -53,7 +53,7 @@ export async function getBatch(req, res, next) {
   let last = req.query.last || new Date();
   try {
     let topics = await Topic.where('createdAt').lte(last).where('createdAt').sort('-1').limit(limit);
-    res.ok({topics: topics});
+    return res.ok({topics: topics});
   } catch (err) {
     return next(err);
   }
@@ -66,7 +66,7 @@ export async function createBatch(req, res, next) {
   }
   try {
     let topics = await Topic.createTopics(names);
-    res.created({topics: topics});
+    return res.created({topics: topics});
   } catch (err) {
     return next(err);
   }

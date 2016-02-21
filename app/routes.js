@@ -18,8 +18,8 @@ let authenticate = passport.authenticate('bearer', {session: false});
 let router = express.Router();
 
 router.route('/')
-  .get(function(req, res) {
-    res.send('Hello yo');
+  .get(function(req, res, next) {
+    return res.send('Hello yo');
   });
 
 // Session routes
@@ -69,13 +69,23 @@ protectedTopicRoute('/topic/:id', 'delete', topic.remove);
 * @params model{object}
 * @params controller{function}
 */
-function protectedThreadRoute(route, prop, roles, model, controller) {
-  return router[prop](route, authenticate, authorize(roles, model), wrap(controller));
+function protectedThreadRoute(route, prop, roles, controller) {
+  return router[prop](route, authenticate, authorize(roles), wrap(controller));
 }
+
+router.param('threadId', wrap( async (req, res, next) => {
+  try {
+    let thread = await Thread.findOne({_id: req.params.threadId}).exec();
+    req.obj = thread;
+    return next();
+  } catch(err) {
+    return next(err);
+  }
+}));
 router.get('/threads', wrap(thread.getBatch));
-router.get('/thread/:id', wrap(thread.get));
+router.get('/thread/:threadId', wrap(thread.get));
 router.post('/thread', authenticate, wrap(thread.create));
-protectedThreadRoute('/thread/:id', 'put', ['admin', 'owner'], Thread, thread.update);
-protectedThreadRoute('/thread/:id', 'delete',['admin', 'owner'], Thread,  thread.remove);
+protectedThreadRoute('/thread/:threadId', 'put', ['admin', 'owner'], thread.update);
+protectedThreadRoute('/thread/:threadId', 'delete',['admin', 'owner'],  thread.remove);
 
 export default router;

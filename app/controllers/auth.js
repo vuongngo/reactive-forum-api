@@ -12,7 +12,7 @@ export async function signup(req, res, next) {
     let user = await User.signupUser(params);
     let token = await genToken(user);
     await User.where({_id: user._id}).update({$set: {token: token}});
-    res.created({user: user, token: 'Bearer ' + token});
+    return res.created({user: user, token: 'Bearer ' + token});
   } catch (err) {
     return next(err);
   }
@@ -27,7 +27,7 @@ export async function signin(req, res, next) {
     let user = await User.signinUser(params);
     let token = await genToken(user);
     await User.where({_id: user._id}).update({$set: {token: token}});
-    res.ok({user: user, token: 'Bearer ' + token});
+    return res.ok({user: user, token: 'Bearer ' + token});
   } catch (err) {
     return next(err);
   }
@@ -36,7 +36,7 @@ export async function signin(req, res, next) {
 export async function signout(req, res, next) {
   try {
     await User.where({_id: req.user._id}, {$unset: {token: 1}});
-    res.updated();
+    return res.updated();
   } catch (err) {
     return next(err);
   }

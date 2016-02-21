@@ -7,10 +7,10 @@ import _ from 'lodash';
 * Get thread by id
 */
 export async function get(req, res, next) {
-  let id = req.params.id;
+  let id = req.params.threadId;
   try {
     let thread = await Thread.getThreadById(id);
-    res.ok({thread: thread});
+    return res.ok({thread: thread});
   } catch (err) {
     return next(err);
   };
@@ -22,9 +22,9 @@ export async function get(req, res, next) {
 export async function getBatch(req, res, next) {
   try {
     let threads = await Thread.getThreads(batchQuery(req));
-    res.ok({threads: threads});
+    return res.ok({threads: threads});
   } catch (err) {
-    next(err);
+    return next(err);
   }
 };
 
@@ -41,24 +41,23 @@ export async function create(req, res, next) {
   params.tags = req.body.tags;
   try {
     let thread = await Thread.createThread(params);
-    res.created({thread: thread});
+    return res.created({thread: thread});
   } catch(err) {
-    next(err);
+    return next(err);
   }
 };
 
 /*
 * Update thread
  */
-
 export async function update(req, res, next) {
-  let id = req.params.id;
+  let id = req.params.threadId;
   let params = req.body;
   try {
     let thread = await Thread.updateThread(id, params);
-    res.updated({thread: thread});
+    return res.updated();
   } catch(err) {
-    next(err);
+    return next(err);
   }
 };
 
@@ -67,11 +66,11 @@ export async function update(req, res, next) {
  */
 
 export async function remove(req, res, next) {
-  let id = req.params.id;
+  let id = req.params.threadId;
   try {
     let thread = await Thread.remove({_id: id});
-    res.removed();
+    return res.removed();
   } catch (err) {
-    next(err);
+    return next(err);
   }
 }

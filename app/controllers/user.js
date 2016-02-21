@@ -13,7 +13,7 @@ export async function get(req, res, next) {
   const id = req.params.userId;
   try {
     let user = await User.findOne().where('_id').equals(id).select('username profile').exec();
-    res.ok({user: user});
+    return res.ok({user: user});
   } catch (err) {
     return next(err);
   }
@@ -27,7 +27,7 @@ export async function get(req, res, next) {
 export async function getBatch(req, res, next) {
   try {
     let users = await User.getUsers(batchQuery(req));
-    res.ok({users: users});
+    return res.ok({users: users});
   } catch (err) {
     return next(err);
   }
@@ -43,7 +43,7 @@ export async function update(req, res, next) {
   params = _.pickBy(params, _.isString);
   try {
     let user = await User.update({_id: id}, {$set: params});
-    res.updated();
+    return res.updated();
   } catch (err) {
     return next(err);
   }
@@ -56,7 +56,7 @@ export async function remove(req, res, next) {
   const id = req.params.userId;
   try {
     let user = await User.remove({_id: id});
-    res.removed();
+    return res.removed();
   } catch (err) {
     return next(err);
   }
