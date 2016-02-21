@@ -3,7 +3,9 @@
 */
 export default function authorize(roles = []) {
   return function (req, res, next) {
-    
+    if (roles.length < 1) {
+      return next(); 
+    }
     let checkRole = (role) => {
       switch(role) {
         case 'admin':
@@ -14,6 +16,9 @@ export default function authorize(roles = []) {
           break;
         case 'owner':
           return isOwner(req);
+          break;
+        case 'commentOwner':
+          return isCommentOwner(req);
           break;
         default:
           return false;
@@ -37,5 +42,9 @@ function isSelf(req) {
 
 function isOwner(req) {
   return req.user._id.toString() === req.obj._user.toString();
+}
+
+function isCommentOwner(req) {
+  return req.user._id.toString() === req.comment._user.toString();
 }
 

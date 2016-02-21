@@ -42,6 +42,7 @@ describe('Thread API', () => {
   }));
 
   afterEach(checkAsync( async (done) => {
+    await Thread.remove({});
     await Topic.remove({});
     await User.remove({});
   }));
@@ -123,7 +124,7 @@ describe('Thread API', () => {
         })
         .expect(400, done);
     });
- 
+    
     it('should return thread', done => {
       params._topic = topic._id;
       request(server)
@@ -136,7 +137,7 @@ describe('Thread API', () => {
         })
         .expect(201, done);
     });
-      
+    
   });
 
   describe('update thread endpoint', () => {
@@ -166,15 +167,21 @@ describe('Thread API', () => {
         .put('/api/thread/' + thread._id)
         .send({title: 'Update test'})
         .set('authorization', 'Bearer ' + adminToken)
-        .expect(204, done)
+        .expect(res => {
+          expect(res.body.thread.title).to.equal('Update test');
+        })
+        .expect(200, done)
     });
     
-    it('should update thread when user is admin', done => {
+    it('should update thread when user created thread', done => {
       request(server)
         .put('/api/thread/' + thread._id)
         .send({title: 'Update test'})
         .set('authorization', 'Bearer ' + userToken)
-        .expect(204, done)
+        .expect(res => {
+          expect(res.body.thread.title).to.equal('Update test');
+        })
+        .expect(200, done)
     });
   });
 
@@ -209,7 +216,28 @@ describe('Thread API', () => {
       request(server)
         .del('/api/thread/' + thread._id)
         .set('authorization', 'Bearer ' + userToken)
-        .expect(202, done)
+        .expect(202, done);
     });
   });
+
+  describe('like thread endpoint', () => {
+    it('should return unauthenticate if user not signed in', done => {
+      request(server)
+        .get('/api/thread/' + thread._id + '/like')
+        .expect(401, done);
+    });
+
+    it('should return thread with one like', done => {
+      request(server)
+        .get('/api/thread/' + thread._id + '/like')
+        .set('authorization', 'Bearer ' + userToken)
+        .expect(res => {
+          expect(res.body.thread.likes).to.equal(1);
+          expect(res.body.thread.likeIds.toString()).to.contain(user._id.toString());
+        })
+        .expect(200, done)
+    });
+  })
+
 })
+

@@ -197,15 +197,7 @@ describe('Thread static methods', () => {
       } catch (err) {
         expect(err.name).to.equal('TypeError');
       }
-    }));
-
-    it('should return error when user did not create comment', checkAsync(async (done) => {
-      try {
-        await Thread.updateComment(threadId, threadId, thread.comments[0]._id, 'Mock');
-      } catch (err) {
-        expect(err.name).to.equal('Unauthorized');
-      }
-    }));
+    })); 
 
     it('should update comment', checkAsync(async (done) => {
       try {
@@ -236,14 +228,6 @@ describe('Thread static methods', () => {
         await Thread.removeComment(userId, threadId, '123', 'Mock');
       } catch (err) {
         expect(err.name).to.equal('TypeError');
-      }
-    }));
-
-    it('should return error when user did not create comment', checkAsync(async (done) => {
-      try {
-        await Thread.removeComment(threadId, threadId, thread.comments[0]._id, 'Mock');
-      } catch (err) {
-        expect(err.name).to.equal('Unauthorized');
       }
     }));
 
@@ -417,7 +401,7 @@ describe('Thread static methods', () => {
       try {
         let res = await Thread.likeComment(userId, threadId, thread.comments[0]._id);
         expect(res.comments[0].likes).to.equal(1);
-        expect(res.comments[0].likesIds.toString()).to.contain(userId.toString());
+        expect(res.comments[0].likeIds.toString()).to.contain(userId.toString());
       } catch(err) {
         expect(err).to.be(undefined);
       }
@@ -428,7 +412,7 @@ describe('Thread static methods', () => {
         await Thread.likeComment(userId, threadId, thread.comments[0]._id);
         let res = await Thread.likeComment(userId, threadId, thread.comments[0]._id);
         expect(res.comments[0].likes).to.equal(0);
-        expect(res.comments[0].likesIds.toString()).not.to.contain(userId.toString());
+        expect(res.comments[0].likeIds.toString()).not.to.contain(userId.toString());
       } catch(err) {
         expect(err).to.be(undefined);
       }
@@ -463,7 +447,7 @@ describe('Thread static methods', () => {
       try {
         let res = await Thread.likeReply(userId, threadId, thread.comments[0]._id, thread.comments[0].replies[0]._id);
         expect(res.comments[0].replies[0].likes).to.equal(1);
-        expect(res.comments[0].replies[0].likesIds.toString()).to.contain(userId.toString());
+        expect(res.comments[0].replies[0].likeIds.toString()).to.contain(userId.toString());
       } catch(err) {
         expect(err).to.be(undefined);
       }
@@ -474,7 +458,7 @@ describe('Thread static methods', () => {
         await Thread.likeReply(userId, threadId, thread.comments[0]._id, thread.comments[0].replies[0]._id);
         let res = await Thread.likeReply(userId, threadId, thread.comments[0]._id, thread.comments[0].replies[0]._id);
         expect(res.comments[0].replies[0].likes).to.equal(0);
-        expect(res.comments[0].replies[0].likesIds.toString()).not.to.contain(userId.toString());
+        expect(res.comments[0].replies[0].likeIds.toString()).not.to.contain(userId.toString());
       } catch(err) {
         expect(err).to.be(undefined);
       }

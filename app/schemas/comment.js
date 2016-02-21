@@ -9,7 +9,7 @@ let commentSchema = new Schema({
   text: String,
   replies: {type: [replySchema], default: []},
   likes: Number,
-  likesIds: [{type: Schema.Types.ObjectId, ref: 'User'}],
+  likeIds: [{type: Schema.Types.ObjectId, ref: 'User'}],
   createdAt: {type: Date, default: Date.now},
   updatedAt: Date
 });
