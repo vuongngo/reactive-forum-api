@@ -4,7 +4,7 @@ import { checkAsync } from '../utils/check';
 import Topic from '../../app/models/topic';
 import { genToken, verifyToken } from '../../app/utils/encryption';
 import User from '../../app/models/user';
-
+ 
 describe('Topic API', () => {
   var server;
   var id;

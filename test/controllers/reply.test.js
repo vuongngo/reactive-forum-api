@@ -5,9 +5,11 @@ import { genToken, verifyToken } from '../../app/utils/encryption';
 import User from '../../app/models/user';
 import Thread from '../../app/models/thread';
 import Topic from '../../app/models/topic';
+import simpleRequest from 'request';
 
 describe('Reply API', () => {
   var server;
+  var socket;
   var topic;
   var thread;
   var user;
@@ -69,6 +71,28 @@ describe('Reply API', () => {
         })
         .expect(200, done);
     });
+
+    it('should return reply via socket', done => {
+      delete require.cache[require.resolve('socket.io-client')];
+      socket = require('socket.io-client')('http://0.0.0.0:3000', options);
+      socket.on('newReply', function(data) {
+        expect(data.threadId.toString()).to.equal(thread._id.toString());
+        expect(data.commentId.toString()).to.equal(thread.comments[0]._id.toString());
+        expect(data.reply.text).to.equal('Test');
+        socket.close();
+        done(); 
+      });
+      let options = {
+        url: `http://0.0.0.0:3000/api/thread/${thread._id}/comment/${thread.comments[0]._id}/reply`,
+        headers: {
+          'Authorization': 'Bearer ' + userToken,
+          'contentType': 'application/json'
+        },
+        form: {text: 'Test'}
+      };
+      simpleRequest.post(options, (err, res, body) => {
+      });
+    });
   });
 
   describe('update reply endpoint', () => {
@@ -108,6 +132,28 @@ describe('Reply API', () => {
         })
         .expect(200, done);
     });
+
+    it('should return updated reply via socket', done => {
+      delete require.cache[require.resolve('socket.io-client')];
+      socket = require('socket.io-client')('http://0.0.0.0:3000', options);
+      socket.on('updatedReply', function(data) {
+        expect(data.threadId.toString()).to.equal(thread._id.toString());
+        expect(data.commentId.toString()).to.equal(thread.comments[0]._id.toString());
+        expect(data.reply.text).to.equal('Updated Test');
+        socket.close();
+        done(); 
+      });
+      let options = {
+        url: `http://0.0.0.0:3000/api/thread/${thread._id}/comment/${thread.comments[0]._id}/reply/${thread.comments[0].replies[0]._id}`,
+        headers: {
+          'Authorization': 'Bearer ' + userToken,
+          'contentType': 'application/json'
+        },
+        form: {text: 'Updated Test'} 
+      };
+      simpleRequest.put(options, (err, res, body) => {
+      });
+    });
   });
   
   describe('remove reply endpoint', () => {
@@ -141,6 +187,28 @@ describe('Reply API', () => {
         .send({text: 'Removed Test'})
         .expect(200, done);
     });
+
+    it('should return removed reply via socket', done => {
+      delete require.cache[require.resolve('socket.io-client')];
+      socket = require('socket.io-client')('http://0.0.0.0:3000', options);
+      socket.on('removedReply', function(data) {
+        expect(data.threadId.toString()).to.equal(thread._id.toString());
+        expect(data.commentId.toString()).to.equal(thread.comments[0]._id.toString());
+        expect(data.replyId.toString()).to.equal(thread.comments[0].replies[0]._id.toString());
+        socket.close();
+        done(); 
+      });
+      let options = {
+        url: `http://0.0.0.0:3000/api/thread/${thread._id}/comment/${thread.comments[0]._id}/reply/${thread.comments[0].replies[0]._id}`,
+        headers: {
+          'Authorization': 'Bearer ' + userToken,
+          'contentType': 'application/json'
+        }
+      };
+      simpleRequest.del(options, (err, res, body) => {
+      });
+    });
+    
   });
 
   describe('like reply endpoint', () => {
@@ -174,6 +242,28 @@ describe('Reply API', () => {
                 .expect(200, done);
             })
             .catch(err => done());
+    });
+
+    it('should return updated reply via socket', done => {
+      delete require.cache[require.resolve('socket.io-client')];
+      socket = require('socket.io-client')('http://0.0.0.0:3000', options);
+      socket.on('updatedReply', function(data) {
+        expect(data.threadId.toString()).to.equal(thread._id.toString());
+        expect(data.commentId.toString()).to.equal(thread.comments[0]._id.toString());
+        expect(data.reply.likes).to.equal(1);
+        expect(data.reply.likeIds.toString()).to.contain(user._id.toString());
+        socket.close();
+        done(); 
+      });
+      let options = {
+        url: `http://0.0.0.0:3000/api/thread/${thread._id}/comment/${thread.comments[0]._id}/reply/${thread.comments[0].replies[0]._id}/like`,
+        headers: {
+          'Authorization': 'Bearer ' + userToken,
+          'contentType': 'application/json'
+        }
+      };
+      simpleRequest.get(options, (err, res, body) => {
+      });
     });
   });
 })

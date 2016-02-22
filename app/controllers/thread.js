@@ -2,7 +2,8 @@ import Thread from '../models/thread';
 import { checkKeys } from '../utils/check';
 import { batchQuery } from '../utils/query';
 import _ from 'lodash';
-
+import * as threadEmiter from '../socket/thread';
+ 
 /*
  * Get thread by id
  */
@@ -41,6 +42,7 @@ export async function create(req, res, next) {
   params.tags = req.body.tags;
   try {
     let thread = await Thread.createThread(params);
+    threadEmiter.create(thread); 
     return res.created({thread: thread});
   } catch(err) {
     return next(err);
@@ -55,6 +57,7 @@ export async function update(req, res, next) {
   let params = req.body;
   try {
     let thread = await Thread.updateThread(id, params);
+    threadEmiter.update(thread);
     return res.ok({thread: thread});
   } catch(err) {
     return next(err);
@@ -69,6 +72,7 @@ export async function remove(req, res, next) {
   let id = req.params.threadId;
   try {
     let thread = await Thread.remove({_id: id});
+    threadEmiter.remove(id);
     return res.removed();
   } catch (err) {
     return next(err);
@@ -84,6 +88,7 @@ export async function like(req, res, next) {
   let id = req.params.threadId;
   try {
     let thread = await Thread.likeThread(userId, id);
+    threadEmiter.update(thread);
     return res.ok({thread: thread});
   } catch (err) {
     return next(err);

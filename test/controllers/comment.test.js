@@ -5,9 +5,11 @@ import { genToken, verifyToken } from '../../app/utils/encryption';
 import User from '../../app/models/user';
 import Thread from '../../app/models/thread';
 import Topic from '../../app/models/topic';
+import simpleRequest from 'request';
 
 describe('Comment API', () => {
   var server;
+  var socket;
   var topic;
   var thread;
   var user;
@@ -16,6 +18,11 @@ describe('Comment API', () => {
   var anotherUserToken;
   var admin;
   var adminToken;
+  var options ={
+    transports: ['websocket'],
+    'force new connection': true
+  };
+  
   before(() => {
     delete require.cache[require.resolve('../../server')];
     server = require('../../server');
@@ -69,6 +76,27 @@ describe('Comment API', () => {
         })
         .expect(200, done);
     });
+
+    it('should return comment via socket', done => {
+      delete require.cache[require.resolve('socket.io-client')];
+      socket = require('socket.io-client')('http://0.0.0.0:3000', options);
+      socket.on('newComment', function(data) {
+        expect(data.threadId.toString()).to.equal(thread._id.toString());
+        expect(data.comment.text).to.equal('Test');
+        socket.close();
+        done(); 
+      });
+      let options = {
+        url: `http://0.0.0.0:3000/api/thread/${thread._id}/comment`,
+        headers: {
+          'Authorization': 'Bearer ' + userToken,
+          'contentType': 'application/json'
+        },
+        form: {text: 'Test'}
+      };
+      simpleRequest.post(options, (err, res, body) => {
+      });
+    });
   });
 
   describe('update comment endpoint', () => {
@@ -108,6 +136,27 @@ describe('Comment API', () => {
         })
         .expect(200, done);
     });
+
+    it('should return updated comment via socket', done => {
+      delete require.cache[require.resolve('socket.io-client')];
+      socket = require('socket.io-client')('http://0.0.0.0:3000', options);
+      socket.on('updatedComment', function(data) {
+        expect(data.threadId.toString()).to.equal(thread._id.toString());
+        expect(data.comment.text).to.equal('Updated test');
+        socket.close();
+        done(); 
+      });
+      let options = {
+        url: `http://0.0.0.0:3000/api/thread/${thread._id}/comment/${thread.comments[0]._id}`, 
+        headers: {
+          'Authorization': 'Bearer ' + userToken,
+          'contentType': 'application/json'
+        },
+        form: {text: 'Updated test'}
+      };
+      simpleRequest.put(options, (err, res, body) => {
+      });
+    });
   });
   
   describe('remove comment endpoint', () => {
@@ -140,6 +189,26 @@ describe('Comment API', () => {
         .set('authorization', 'Bearer ' + adminToken)
         .send({text: 'Removed Test'})
         .expect(202, done);
+    });
+
+    it('should return removed comment via socket', done => {
+      delete require.cache[require.resolve('socket.io-client')];
+      socket = require('socket.io-client')('http://0.0.0.0:3000', options);
+      socket.on('removedComment', function(data) {
+        expect(data.threadId.toString()).to.equal(thread._id.toString());
+        expect(data.commentId.toString()).to.equal(thread.comments[0]._id.toString());
+        socket.close();
+        done(); 
+      });
+      let options = {
+        url: `http://0.0.0.0:3000/api/thread/${thread._id}/comment/${thread.comments[0]._id}`, 
+        headers: {
+          'Authorization': 'Bearer ' + userToken,
+          'contentType': 'application/json'
+        }
+      };
+      simpleRequest.del(options, (err, res, body) => {
+      });
     });
   });
 
@@ -175,6 +244,28 @@ describe('Comment API', () => {
             })
             .catch(err => done());
     });
+
+    it('should return updated comment via socket', done => {
+      delete require.cache[require.resolve('socket.io-client')];
+      socket = require('socket.io-client')('http://0.0.0.0:3000', options);
+      socket.on('updatedComment', function(data) {
+        expect(data.threadId.toString()).to.equal(thread._id.toString());
+        expect(data.comment.likes).to.equal(1);
+        expect(data.comment.likeIds.toString()).to.equal(user._id.toString());
+        socket.close();
+        done(); 
+      });
+      let options = {
+        url: `http://0.0.0.0:3000/api/thread/${thread._id}/comment/${thread.comments[0]._id}/like`, 
+        headers: {
+          'Authorization': 'Bearer ' + userToken,
+          'contentType': 'application/json'
+        }
+      };
+      simpleRequest.get(options, (err, res, body) => {
+      });
+    });
+    
   });
   
 })

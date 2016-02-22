@@ -4,10 +4,12 @@ import { checkAsync } from '../utils/check';
 import { genToken, verifyToken } from '../../app/utils/encryption';
 import User from '../../app/models/user';
 import Thread from '../../app/models/thread';
-import Topic from '../../app/models/topic';
+import Topic from '../../app/models/topic'; 
+import simpleRequest from 'request';
 
 describe('Thread API', () => {
   var server;
+  var socket;
   var topic;
   var thread;
   var user;
@@ -16,6 +18,11 @@ describe('Thread API', () => {
   var anotherUserToken;
   var admin;
   var adminToken;
+  var options ={
+    transports: ['websocket'],
+    'force new connection': true
+  };
+
   before(() => {
     delete require.cache[require.resolve('../../server')];
     server = require('../../server');
@@ -135,7 +142,28 @@ describe('Thread API', () => {
           expect(res.body.thread.title).to.equal('Test');
           expect(res.body.thread._user.username).to.equal('Mock');
         })
-        .expect(201, done);
+        .expect(201, done)
+    });
+
+    it('should return thread via socket', done => {
+      delete require.cache[require.resolve('socket.io-client')];
+      socket = require('socket.io-client')('http://0.0.0.0:3000', options);
+      socket.on('newThread', function(data) {
+        expect(data.title).to.equal('Test');
+        socket.close();
+        done(); 
+      });
+      params._topic = topic._id.toString();
+      let options = {
+        url: 'http://0.0.0.0:3000/api/thread',
+        headers: {
+          'Authorization': 'Bearer ' + userToken,
+          'contentType': 'application/json'
+        },
+        form: params
+      };
+      simpleRequest.post(options, (err, res, body) => {
+      });
     });
     
   });
@@ -183,6 +211,27 @@ describe('Thread API', () => {
         })
         .expect(200, done)
     });
+
+    it('should return thread via socket', done => {
+      delete require.cache[require.resolve('socket.io-client')];
+      socket = require('socket.io-client')('http://0.0.0.0:3000', options);
+      socket.on('updatedThread', function(data) {
+        expect(data.title).to.equal('Update test');
+        socket.close();
+        done(); 
+      });
+      let options = {
+        url: 'http://0.0.0.0:3000/api/thread/' + thread._id.toString(),
+        headers: {
+          'Authorization': 'Bearer ' + userToken,
+          'contentType': 'application/json'
+        },
+        form: {title: 'Update test'}
+      };
+      simpleRequest.put(options, (err, res, body) => {
+      });
+    });
+
   });
 
   describe('remove thread endpoint', () => {
@@ -218,6 +267,25 @@ describe('Thread API', () => {
         .set('authorization', 'Bearer ' + userToken)
         .expect(202, done);
     });
+
+    it('should return threadId via socket', done => {
+      delete require.cache[require.resolve('socket.io-client')];
+      socket = require('socket.io-client')('http://0.0.0.0:3000', options);
+      socket.on('removedThread', function(data) {
+        expect(data.toString()).to.equal(thread._id.toString());
+        socket.close();
+        done(); 
+      });
+      let options = {
+        url: 'http://0.0.0.0:3000/api/thread/' + thread._id.toString(),
+        headers: {
+          'Authorization': 'Bearer ' + userToken,
+          'contentType': 'application/json'
+        }
+      };
+      simpleRequest.del(options, (err, res, body) => {
+      });
+    });
   });
 
   describe('like thread endpoint', () => {
@@ -237,7 +305,27 @@ describe('Thread API', () => {
         })
         .expect(200, done)
     });
-  })
+
+    it('should return updated thread via socket', done => {
+      delete require.cache[require.resolve('socket.io-client')];
+      socket = require('socket.io-client')('http://0.0.0.0:3000', options);
+      socket.on('updatedThread', function(data) {
+        expect(data.likes).to.equal(1);
+        expect(data.likeIds.toString()).to.contain(user._id.toString());
+        socket.close();
+        done(); 
+      });
+      let options = {
+        url: 'http://0.0.0.0:3000/api/thread/' + thread._id.toString() + '/like',
+        headers: {
+          'Authorization': 'Bearer ' + userToken,
+          'contentType': 'application/json'
+        }
+      };
+      simpleRequest.get(options, (err, res, body) => {
+      });
+    });
+  });
 
 })
 
