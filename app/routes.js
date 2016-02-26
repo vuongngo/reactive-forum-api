@@ -1,7 +1,10 @@
-import { wrap } from './utils/async';
 import express from 'express';
+// Middlewares
 import passport from 'passport';
 import BearerStrategy from 'passport-http-bearer';
+import authorize from './middlewares/authorization';
+import multer from 'multer';
+// Controllers
 import {
   auth,
   user,
@@ -10,18 +13,24 @@ import {
   comment,
   reply
 } from './controllers';
-import { authenticateWithToken } from './utils/strategy';
-import authorize from './middlewares/authorization';
+// Models
 import Thread from './models/thread';
-import _ from 'lodash';
+//Helpers
+import { authenticateWithToken } from './utils/strategy';
+import { wrap } from './utils/async';
 
+// Authentication with password
 passport.use(new BearerStrategy(authenticateWithToken));
 let authenticate = passport.authenticate('bearer', {session: false});
 
+// FileUpload initialize
+let upload = multer({dest: 'uploads'});
+
+// Router initialize
 let router = express.Router(); 
 
 router.route('/')
-  .get(function(req, res, next) {
+ .get(function(req, res, next) {
     return res.send('Hello yo');
   });
 
@@ -85,13 +94,13 @@ router.param('threadId', wrap( async (req, res, next) => {
   }
 }));
 
+let threadUpload = upload.fields([{name: 'cardImg', maxCount: 1}, {name: 'bodyImgs', maxCount: 4}]);
 router.get('/threads', wrap(thread.getBatch));
 router.get('/thread/:threadId', wrap(thread.get));
 router.get('/thread/:threadId/like', authenticate, wrap(thread.like));
-router.post('/thread', authenticate, wrap(thread.create));
-protectedThreadRoute('/thread/:threadId', 'put', ['admin', 'owner'], thread.update);
-protectedThreadRoute('/thread/:threadId', 'delete',['admin', 'owner'],  thread.remove);
-
+router.post('/thread', authenticate, threadUpload, wrap(thread.create));
+router.put('/thread/:threadId', authenticate, authorize(['admin', 'owner']), threadUpload, wrap(thread.update)); 
+router.delete('/thread/:threadId', authenticate, authorize(['admin', 'owner']), wrap(thread.remove));
 
 /*
  * Comment router is nested inside router
@@ -114,7 +123,7 @@ function protectedCommentRoute(route, prop, roles, controller) {
 //Validate comment
 commentRouter.param('commentId', wrap(async (req, res, next) => {
   try {
-    let comment = _.find(req.obj.comments, comment => comment._id.toString() === req.params.commentId.toString());
+    let comment = req.obj.comments.find(comment => comment._id.toString() === req.params.commentId.toString());
     if (comment) {
       req.comment = comment;
       return next();
@@ -151,7 +160,7 @@ function protectedReplyRoute(route, prop, roles, controller) {
 //Validate reply
 replyRouter.param('replyId', wrap(async (req, res, next) => {
   try {
-    let replyIndex = _.findIndex(req.comment.replies, reply => reply._id.toString() === req.params.replyId.toString());
+    let replyIndex = req.comment.replies.findIndex(reply => reply._id.toString() === req.params.replyId.toString());
     if (replyIndex > -1) {
       req.reply = req.comment.replies[replyIndex];
       req.replyIndex = replyIndex;

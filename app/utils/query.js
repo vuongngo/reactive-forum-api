@@ -17,4 +17,21 @@ export function batchQuery(req) {
     }
   });
   return  {dbQuery: dbQuery, skip: skip, limit: limit};
+};
+
+export function getImg(req, field) {
+  let imgParams = {meta: {}};
+  if (req.files) {
+    let img = req.files[field]; 
+    if (img) {
+      if (img.length > 0) {
+        imgParams.url = img[0].path;
+        imgParams.meta.type = img[0].mimetype;
+        imgParams.meta.width = req.body.imgWidth || 500;
+        imgParams.meta.height = req.body.imgHeight || 300;
+      }
+    }
+  }
+  return imgParams;
 }
+

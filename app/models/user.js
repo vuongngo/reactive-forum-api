@@ -9,7 +9,7 @@ import { promisify } from '../utils/async';
 * @params params.password{string}
 */
 userSchema.statics.signupUser = function (params) {
-  let self = this;
+  let that = this;
   // promisify for async function
   return new Promise(function (resolve, reject) {
     let password = params.password;
@@ -23,12 +23,11 @@ userSchema.statics.signupUser = function (params) {
         params.salt = salt;
         params.hash = hash.toString('hex');
         // Create new user with salt and hash
-        self.create(params, (err, res) => {
+        that.create(params, (err, res) => {
           if (err) {
             reject(err);
-          } else {
-            resolve(_.pick(res, ['_id', 'username']));
           }
+          resolve(_.pick(res, ['_id', 'username']));
         });
       });
     });

@@ -1,5 +1,6 @@
 import request from 'supertest';
 import expect from 'expect.js';
+import path from 'path';
 import { checkAsync } from '../utils/check';
 import { genToken, verifyToken } from '../../app/utils/encryption';
 import User from '../../app/models/user';
@@ -137,12 +138,17 @@ describe('Thread API', () => {
       request(server)
         .post('/api/thread')
         .set('authorization', 'Bearer ' + userToken)
-        .send(params)
+        .type('form')
+        .field('_topic', params._topic.toString()) 
+        .field('title', params.title)
+        .field('body', params.body)
+        .attach('cardImg', path.resolve('test/fixtures/test.png'))
         .expect(res => {
           expect(res.body.thread.title).to.equal('Test');
           expect(res.body.thread._user.username).to.equal('Mock');
+          expect(res.body.thread.cardImg.url).to.be.a('string');
         })
-        .expect(201, done)
+        .expect(201, done) 
     });
 
     it('should return thread via socket', done => {
@@ -212,6 +218,18 @@ describe('Thread API', () => {
         .expect(200, done)
     });
 
+    it('should update thread image when user created thread', done => {
+      request(server)
+        .put('/api/thread/' + thread._id)
+        .set('authorization', 'Bearer ' + userToken)
+        .type('form')
+        .attach('cardImg', path.resolve('test/fixtures/test.png'))
+        .expect(res => {
+          expect(res.body.thread.cardImg.url).to.be.a('string');
+        })
+        .expect(200, done)
+    });
+    
     it('should return thread via socket', done => {
       delete require.cache[require.resolve('socket.io-client')];
       socket = require('socket.io-client')('http://0.0.0.0:3000', options);

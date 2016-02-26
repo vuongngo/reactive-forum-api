@@ -3,7 +3,8 @@ import { checkKeys } from '../utils/check';
 import { batchQuery } from '../utils/query';
 import _ from 'lodash';
 import * as threadEmiter from '../socket/thread';
- 
+import { getImg } from '../utils/query';
+
 /*
  * Get thread by id
  */
@@ -38,8 +39,8 @@ export async function create(req, res, next) {
   if (checkKeys(params)) {
     return res.badRequest(checkKeys(params));
   }
-  params.cardImg = req.body.cardImg;
-  params.tags = req.body.tags;
+  params.tags = req.body.tags; 
+  params.cardImg = getImg(req, 'cardImg'); 
   try {
     let thread = await Thread.createThread(params);
     threadEmiter.create(thread); 
@@ -55,6 +56,7 @@ export async function create(req, res, next) {
 export async function update(req, res, next) {
   let id = req.params.threadId;
   let params = req.body;
+  params.cardImg = getImg(req, 'cardImg'); 
   try {
     let thread = await Thread.updateThread(id, params);
     threadEmiter.update(thread);
@@ -94,3 +96,4 @@ export async function like(req, res, next) {
     return next(err);
   }
 }
+

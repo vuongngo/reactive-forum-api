@@ -1,5 +1,6 @@
 import request from 'supertest';
 import expect from 'expect.js';
+import path from 'path';
 import { checkAsync } from '../utils/check';
 import User from '../../app/models/user';
 import { genToken, verifyToken } from '../../app/utils/encryption';
@@ -85,6 +86,14 @@ describe('User API', () => {
         .put('/api/user/' + user._id)
         .send({username: 'yo'})
         .set('authorization', 'Bearer ' + token)
+        .expect(204, done);
+    });
+
+    it('should return 204 if update image', done => {
+      request(server)
+        .put('/api/user/' + user._id)
+        .set('authorization', 'Bearer ' + token)
+        .attach('avatar', path.resolve('test/fixtures/test.png'))
         .expect(204, done);
     });
   });

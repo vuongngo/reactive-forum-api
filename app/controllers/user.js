@@ -3,7 +3,7 @@
 */
 import User from '../models/user';
 import { checkKeys } from '../utils/check';
-import { batchQuery } from '../utils/query';
+import { batchQuery, getImg } from '../utils/query';
 import _ from 'lodash';
 
 /*
@@ -39,7 +39,7 @@ export async function getBatch(req, res, next) {
 export async function update(req, res, next) {
   const id = req.params.userId;
   let { username, firstName, lastName, avatar } = req.body;
-  let params = {username: username, 'profile.firstName': firstName, 'profile.lastName': lastName, 'profile.avatar': avatar};
+  let params = {username: username, 'profile.firstName': firstName, 'profile.lastName': lastName, 'profile.avatar': getImg(req, 'avatar')};
   params = _.pickBy(params, _.isString);
   try {
     let user = await User.update({_id: id}, {$set: params});
